@@ -1,0 +1,18 @@
+GET http://localhost:3000/customer
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU3VqYW4iLCJpYXQiOjE1OTIxMTAyOTAsImV4cCI6MTU5MjExMDMwNX0.sIcfx1VKiyClIQ5TLHnjWwDyu9VWHeqYJM9BPE5zGi8
+
+###
+GET http://localhost:3000/token
+Content-Type: application/json
+
+{
+    "token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiU3VqYW4iLCJpYXQiOjE1OTIxMTAyNTh9.FtxsSKAAbvcyyH5I0JsHY3BwmHZN5-PEbrPe4JIrd2M"
+}
+
+###
+POST http://localhost:3000/login
+Content-Type: application/json
+
+{
+    "username":"Sujan"
+}

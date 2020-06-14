@@ -1,0 +1,23 @@
+{
+  "name": "nodejs-restapi",
+  "version": "1.0.0",
+  "description": "Simple Example of nodejs to create rest call using MySQL",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": {
+    "name": "Rachel",
+    "email": "restapi2example@gmail.com",
+    "url": "http://www.resapiexample.com/"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.16.1",
+    "dotenv": "^8.2.0",
+    "express": "^4.14.1",
+    "jsonwebtoken": "^8.5.1",
+    "mysql": "^2.13.0"
+  }
+}
