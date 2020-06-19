@@ -6,24 +6,15 @@ var connection = require('../config/db');
 
   //rest api to get all customers
   app.get('/customer', function (req, res) {
-    connection.query('select * from customer', function (error, results, fields) {
+    connection.query('select * from tbl_registration', function (error, results, fields) {
        if (error) throw error;
        res.send(results);
      });
   });
 
-  //rest api to get a single customer data
+  //rest api to get a single tbl_registration data
   app.get('/customer/:id', function (req, res) {
-    connection.query('select * from customer where Id=?', [req.params.id], function (error, results, fields) {
-       if (error) throw error;
-       res.send(results);
-     });
-  });
-  
-  //rest api to create a new customer record into mysql database
-  app.post('/customer', function (req, res) {
-    var params  = req.body;
-    connection.query('INSERT INTO customer SET ?', params, function (error, results, fields) {
+    connection.query('select * from tbl_registration where id=?', [req.params.id], function (error, results, fields) {
        if (error) throw error;
        res.send(results);
      });
@@ -31,7 +22,7 @@ var connection = require('../config/db');
   
   //rest api to update record into mysql database
   app.post('/updatecustomer', function (req, res) {
-    connection.query('UPDATE `customer` SET `Name`=?,`Address`=?,`Country`=?,`Phone`=? where `Id`=?', [req.body.Name,req.body.Address, req.body.Country, req.body.Phone, req.body.Id], function (error, results, fields) {
+    connection.query('UPDATE `tbl_registration` SET `firstname`=?,`lastname`=?,`email`=?,`phone`=? where `id`=?', [req.body.firstname,req.body.lastname, req.body.email, req.body.phone, req.body.id], function (error, results, fields) {
      if (error) throw error;
        res.send(results);
      });
@@ -39,7 +30,7 @@ var connection = require('../config/db');
   
   //rest api to delete record from mysql database
   app.delete('/customer', function (req, res) {
-    connection.query('DELETE FROM `customer` WHERE `Id`=?', [req.body.Id], function (error, results, fields) {
+    connection.query('DELETE FROM `tbl_registration` WHERE `id`=?', [req.body.id], function (error, results, fields) {
      if (error) throw error;
        res.send('Record has been deleted!');
      });

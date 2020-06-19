@@ -1,10 +1,13 @@
 require('dotenv').config();
 var http = require("http");
 var express = require('express');
+const cors = require('cors');
 var app = express();
 var mysql = require('mysql');
 var bodyParser = require('body-parser');
 const logger = require('./logger/logger');
+
+app.use(cors());
 
 //start body-parser configuration
 app.use( bodyParser.json() );       // to support JSON-encoded bodies
