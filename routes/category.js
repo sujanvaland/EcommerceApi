@@ -148,7 +148,7 @@ var upload = multer({ storage: storage,limits: {
   });
 
   //rest api to get a single tbl_categorymaster data
-  app.get('/category/:id', function (req, res) {
+  app.get('/categorydetail/:id', function (req, res) {
     connection.query('select * from tbl_categorymaster where id=?', [req.params.id], function (error, results, fields) {
        if (error) throw error;
        res.send(results);
@@ -156,11 +156,144 @@ var upload = multer({ storage: storage,limits: {
   });
   
   //rest api to update record into mysql database
-  app.post('/updatecategory', function (req, res) {
-    connection.query('UPDATE `tbl_categorymaster` SET `firstname`=?,`lastname`=?,`email`=?,`phone`=? where `id`=?', [req.body.firstname,req.body.lastname, req.body.email, req.body.phone, req.body.id], function (error, results, fields) {
-     if (error) throw error;
-       res.send(results);
-     });
+  app.post('/updatecategory', (req, res) => {
+
+    upload(req, res, function (err) {
+      if (err) 
+      {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.send({ Message: 'limit file size 1MB'})
+        } else if (err.code === 'filetype') {
+            return res.send({ Message: 'Must be valid file extension only jpg or png'})
+        } else {
+            return res.send({ Message: 'something went wrong'})
+        }
+
+      } 
+      else 
+      {
+        if (!req.file) {
+            return res.send({ Message: 'No file selected'})
+        } 
+
+        // here in the req.file you will have the uploaded avatar file
+        var params  = JSON.parse(req.body.data);
+        const imagepath = 'uploads/categoryicon/'+req.file.filename;
+        connection.query('select name from tbl_categorymaster where name="'+params.name+'" and cat="'+params.cat+'" and id !="'+params.id+'"', function (error, results, fields) {
+          if(results.length == 0)
+          {
+              //console.log(req);
+              var parentcat = params.cat;
+
+              if (params.isactive == true)
+              {
+                params.isactive = 1;
+              }
+              else
+              {
+                params.isactive = 0;
+              }
+
+              connection.query('select leftextent,rightextent,cat,categoryimage from tbl_categorymaster where id='+params.id, function (error, results, fields) {
+                if (error) throw error;
+                if(results.length)
+                {
+                  var newstring=JSON.stringify(results);
+                  var newjson =  JSON.parse(newstring);
+                  leftextent = newjson[0].leftextent;
+                  rightextent = newjson[0].leftextent;
+                  parentcat = newjson[0].cat;
+                  oldcategoryimage = newjson[0].categoryimage;
+
+                  const unlinkimagepath = 'uploads/categoryicon/'+oldcategoryimage;
+                  fs.unlink(unlinkimagepath, (err) => {});
+
+                  if(parentcat!=0)
+                  {
+                    connection.query('update tbl_categorymaster set isactive='+params.isactive+' where leftextent >= '+leftextent+' and rightextent <= '+rightextent, function (error, results, fields) {
+                      if (error) throw error;
+                    });
+                  }
+
+                  connection.query('update tbl_categorymaster set sortorder=sortorder+1 where id !='+params.id+' and sortorder >= '+params.sortorder, function (error, results, fields) {
+                    if (error) throw error;
+  
+                    params.slug=slug(params.name);
+                    params.categoryimage= req.file.filename;
+  
+                    connection.query('UPDATE `tbl_categorymaster` SET `name`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`categoryimage`=?,`level`=? where `id`=?', [params.name, params.slug, params.cat, params.sortorder, params.isactive, params.categoryimage, params.level, params.id], function (error, results, fields) {
+                      if (error) throw error;
+                        res.json({ Message:"success",results});
+                      });
+                  });
+                }
+              });
+          }
+          else
+          {
+            fs.unlink(imagepath, (err) => {
+            });
+            return res.send({ Message: 'Category name already exist. !!!'})
+          }
+        });
+      }
+    });
+  });
+
+  //rest api to update record into mysql database
+  app.post('/updatedata', function (req, res) {
+    // here in the req.file you will have the uploaded avatar file
+    var params  = req.body;
+    connection.query('select name from tbl_categorymaster where name="'+params.name+'" and cat="'+params.cat+'" and id !="'+params.id+'"', function (error, results, fields) {
+      if(results.length == 0)
+      {
+          //console.log(req);
+          var parentcat = params.cat;
+
+          if (params.isactive == true)
+          {
+            params.isactive = 1;
+          }
+          else
+          {
+            params.isactive = 0;
+          }
+
+          connection.query('select leftextent,rightextent,cat from tbl_categorymaster where id='+params.id, function (error, results, fields) {
+            if (error) throw error;
+            if(results.length)
+            {
+              var newstring=JSON.stringify(results);
+              var newjson =  JSON.parse(newstring);
+              leftextent = newjson[0].leftextent;
+              rightextent = newjson[0].leftextent;
+              parentcat = newjson[0].cat;
+
+              if(parentcat!=0)
+              {
+                connection.query('update tbl_categorymaster set isactive='+params.isactive+' where leftextent >= '+leftextent+' and rightextent <= '+rightextent, function (error, results, fields) {
+                  if (error) throw error;
+                });
+              }
+
+              connection.query('update tbl_categorymaster set sortorder=sortorder+1 where id !='+params.id+' and sortorder >= '+params.sortorder, function (error, results, fields) {
+                if (error) throw error;
+  
+                params.slug=slug(params.name);
+  
+                connection.query('UPDATE `tbl_categorymaster` SET `name`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`level`=? where `id`=?', [params.name, params.slug, params.cat, params.sortorder, params.isactive, params.level, params.id], function (error, results, fields) {
+                  if (error) throw error;
+                    res.json({ Message:"success",results});
+                  });
+              });
+            }
+          });
+      }
+      else
+      {
+        return res.send({ Message: 'Category name already exist. !!!'})
+      }
+    });
   });
   
   //rest api to delete record from mysql database
