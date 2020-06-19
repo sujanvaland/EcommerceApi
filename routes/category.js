@@ -194,7 +194,7 @@ var upload = multer({ storage: storage,limits: {
                 params.isactive = 0;
               }
 
-              connection.query('select leftextent,rightextent,cat,categoryimage from tbl_categorymaster where id='+params.id, function (error, results, fields) {
+              connection.query('select leftextent,rightextent,cat,categoryimage,sortorder from tbl_categorymaster where id='+params.id, function (error, results, fields) {
                 if (error) throw error;
                 if(results.length)
                 {
@@ -204,6 +204,7 @@ var upload = multer({ storage: storage,limits: {
                   rightextent = newjson[0].leftextent;
                   parentcat = newjson[0].cat;
                   oldcategoryimage = newjson[0].categoryimage;
+                  oldsortorder = newjson[0].sortorder;
 
                   const unlinkimagepath = 'uploads/categoryicon/'+oldcategoryimage;
                   fs.unlink(unlinkimagepath, (err) => {});
@@ -215,17 +216,20 @@ var upload = multer({ storage: storage,limits: {
                     });
                   }
 
-                  connection.query('update tbl_categorymaster set sortorder=sortorder+1 where id !='+params.id+' and sortorder >= '+params.sortorder, function (error, results, fields) {
-                    if (error) throw error;
-  
-                    params.slug=slug(params.name);
-                    params.categoryimage= req.file.filename;
-  
-                    connection.query('UPDATE `tbl_categorymaster` SET `name`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`categoryimage`=?,`level`=? where `id`=?', [params.name, params.slug, params.cat, params.sortorder, params.isactive, params.categoryimage, params.level, params.id], function (error, results, fields) {
+                  if(oldsortorder!=params.sortorder)
+                  {
+                    connection.query('update tbl_categorymaster set sortorder=sortorder+1 where id !='+params.id+' and sortorder >= '+params.sortorder, function (error, results, fields) {
                       if (error) throw error;
-                        res.json({ Message:"success",results});
-                      });
-                  });
+                    });
+                  }
+                  
+                  params.slug=slug(params.name);
+                  params.categoryimage= req.file.filename;
+
+                  connection.query('UPDATE `tbl_categorymaster` SET `name`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`categoryimage`=?,`level`=? where `id`=?', [params.name, params.slug, params.cat, params.sortorder, params.isactive, params.categoryimage, params.level, params.id], function (error, results, fields) {
+                    if (error) throw error;
+                      res.json({ Message:"success",results});
+                    });
                 }
               });
           }
@@ -259,7 +263,7 @@ var upload = multer({ storage: storage,limits: {
             params.isactive = 0;
           }
 
-          connection.query('select leftextent,rightextent,cat from tbl_categorymaster where id='+params.id, function (error, results, fields) {
+          connection.query('select leftextent,rightextent,cat,sortorder from tbl_categorymaster where id='+params.id, function (error, results, fields) {
             if (error) throw error;
             if(results.length)
             {
@@ -268,6 +272,7 @@ var upload = multer({ storage: storage,limits: {
               leftextent = newjson[0].leftextent;
               rightextent = newjson[0].leftextent;
               parentcat = newjson[0].cat;
+              oldsortorder = newjson[0].sortorder;
 
               if(parentcat!=0)
               {
@@ -276,16 +281,18 @@ var upload = multer({ storage: storage,limits: {
                 });
               }
 
-              connection.query('update tbl_categorymaster set sortorder=sortorder+1 where id !='+params.id+' and sortorder >= '+params.sortorder, function (error, results, fields) {
-                if (error) throw error;
-  
-                params.slug=slug(params.name);
-  
-                connection.query('UPDATE `tbl_categorymaster` SET `name`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`level`=? where `id`=?', [params.name, params.slug, params.cat, params.sortorder, params.isactive, params.level, params.id], function (error, results, fields) {
+              if(oldsortorder!=params.sortorder)
+              {
+                connection.query('update tbl_categorymaster set sortorder=sortorder+1 where id !='+params.id+' and sortorder >= '+params.sortorder, function (error, results, fields) {
                   if (error) throw error;
-                    res.json({ Message:"success",results});
-                  });
-              });
+                });
+              }
+
+              params.slug=slug(params.name);
+              connection.query('UPDATE `tbl_categorymaster` SET `name`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`level`=? where `id`=?', [params.name, params.slug, params.cat, params.sortorder, params.isactive, params.level, params.id], function (error, results, fields) {
+                if (error) throw error;
+                  res.json({ Message:"success",results});
+                });
             }
           });
       }
@@ -297,11 +304,31 @@ var upload = multer({ storage: storage,limits: {
   });
   
   //rest api to delete record from mysql database
-  app.delete('/category', function (req, res) {
-    connection.query('DELETE FROM `tbl_categorymaster` WHERE `id`=?', [req.body.id], function (error, results, fields) {
-     if (error) throw error;
-       res.send('Record has been deleted!');
-     });
+  app.post('/deletedata', function (req, res) {
+
+    connection.query('select categoryimage from tbl_categorymaster where id='+req.body.id, function (error, results, fields) {
+      if (error) throw error;
+      if(results.length)
+      {
+        var newstring=JSON.stringify(results);
+        var newjson =  JSON.parse(newstring);
+        oldcategoryimage = newjson[0].categoryimage;
+
+        const unlinkimagepath = 'uploads/categoryicon/'+oldcategoryimage;
+       // console.log(unlinkimagepath);
+        fs.unlink(unlinkimagepath, (err) => {});
+      }
+
+      connection.query('DELETE FROM `tbl_categorymaster` WHERE id='+req.body.id, function (error, results, fields) {
+        if (error) throw error;
+        
+  
+          res.json({ Message:"success"});
+          //res.send('Category has been deleted!');
+       });
+       
+    });
+    
   });
   
   module.exports = app;
