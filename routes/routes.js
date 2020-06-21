@@ -7,5 +7,6 @@ apiRouter.use('/login', require('./login'));
 apiRouter.use('/user',authenticateToken, require('./users'));
 apiRouter.use('/customer',authenticateToken, require('./customer'));
 apiRouter.use('/category',authenticateToken, require('./category'));
+apiRouter.use('/product',authenticateToken, require('./product'));
 
 module.exports = apiRouter;
