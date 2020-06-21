@@ -13,6 +13,14 @@ var connection = require('../config/db');
   });
 
   //rest api to get a single tbl_registration data
+  app.post('/GetCustomerInfo/:CustomerGuid', function (req, res) {
+    connection.query('select id,firstname,lastname,email,phone,userguid from tbl_registration where userguid=?', [req.params.CustomerGuid], function (error, results, fields) {
+       if (error) throw error;
+       res.send(results);
+     });
+  });
+
+  //rest api to get a single tbl_registration data
   app.get('/customer/:id', function (req, res) {
     connection.query('select * from tbl_registration where id=?', [req.params.id], function (error, results, fields) {
        if (error) throw error;
