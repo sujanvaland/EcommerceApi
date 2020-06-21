@@ -8,7 +8,7 @@ const fs = require('fs')
 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
-      cb(null, 'uploads/categoryicon/');
+      cb(null, 'public/uploads/categoryicon/');
   },
 
   // By default, multer removes file extensions so let's add them back
@@ -175,7 +175,7 @@ var upload = multer({ storage: storage,limits: {
 
         // here in the req.file you will have the uploaded avatar file
         var params  = JSON.parse(req.body.data);
-        const imagepath = 'uploads/categoryicon/'+req.file.filename;
+        const imagepath = 'public/uploads/categoryicon/'+req.file.filename;
         connection.query('select name from tbl_categorymaster where name="'+params.name+'" and cat="'+params.cat+'" and id !="'+params.id+'"', function (error, results, fields) {
           if(results.length == 0)
           {
@@ -203,7 +203,7 @@ var upload = multer({ storage: storage,limits: {
                   oldcategoryimage = newjson[0].categoryimage;
                   oldsortorder = newjson[0].sortorder;
 
-                  const unlinkimagepath = 'uploads/categoryicon/'+oldcategoryimage;
+                  const unlinkimagepath = 'public/uploads/categoryicon/'+oldcategoryimage;
                   fs.unlink(unlinkimagepath, (err) => {});
 
                   if(parentcat!=0)
@@ -311,7 +311,7 @@ var upload = multer({ storage: storage,limits: {
         var newjson =  JSON.parse(newstring);
         oldcategoryimage = newjson[0].categoryimage;
 
-        const unlinkimagepath = 'uploads/categoryicon/'+oldcategoryimage;
+        const unlinkimagepath = 'public/uploads/categoryicon/'+oldcategoryimage;
        // console.log(unlinkimagepath);
         fs.unlink(unlinkimagepath, (err) => {});
       }

@@ -66,11 +66,11 @@ app.post('/login',(req,res) =>{
   //Authenticate user
   const username = req.body.Email;
   const password = req.body.Password;
-  connection.query('SELECT id,firstname,lastname,email,phone,userguid FROM `tbl_registration` WHERE username="'+username+'" and password="'+password+'"', function (error, results, fields) {
+  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username FROM `tbl_registration` WHERE username="'+username+'" and password="'+password+'"', function (error, results, fields) {
     if (error) throw error;
     if(results.length)
     {
-      const user = { name : username}
+      const user = { userguid : results[0].userguid}
       const accessToken = generateAccessToken(user)
       const refreshToken = generateRefreshToken(user);
       refreshTokens.push(refreshToken);
@@ -88,7 +88,7 @@ app.post('/login',(req,res) =>{
 });
 
 function generateAccessToken(user){
-  return jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{ expiresIn : '15s'})
+  return jwt.sign(user,process.env.ACCESS_TOKEN_SECRET)
 }
 
 function generateRefreshToken(user){

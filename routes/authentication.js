@@ -7,8 +7,8 @@ module.exports = (req, res, next) => {
   try {
     const token = req.headers.authorization.split(' ')[1];
     const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-    const username = decodedToken.username;
-    if (req.body.username && req.body.userId !== username) {
+    const CustomerGuid = decodedToken.userguid;
+    if (req.headers.customerguid !== CustomerGuid) {
       return res.sendStatus(401);
     } else {
       next();
