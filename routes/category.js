@@ -5,6 +5,7 @@ var slug = require('slug')
 var multer  = require('multer')
 const path = require('path');
 const fs = require('fs')
+var sizeOf = require('image-size');
 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
@@ -26,9 +27,9 @@ const storage = multer.diskStorage({
 });
 
 var upload = multer({ storage: storage,limits: {
-  fileSize: 10000000
+  fileSize: 1000000
 } }).single('categoryimage');
-//var upload = multer({ dest: 'uploads/categoryicon/' })
+//var upload = multer({ dest: 'public/uploads/categoryicon/' })
 
   app.post('/category', (req, res) => {
     upload(req, res, function (err) {
@@ -47,82 +48,95 @@ var upload = multer({ storage: storage,limits: {
       {
         if (!req.file) {
             return res.send({ Message: 'No file selected'})
-        } 
-
-        // here in the req.file you will have the uploaded avatar file
-        var params  = JSON.parse(req.body.data);
-        const imagepath = 'uploads/categoryicon/'+req.file.filename;
-        connection.query('select name from tbl_categorymaster where name="'+params.name+'" and cat="'+params.cat+'"', function (error, results, fields) {
-          if(results.length == 0)
-          {
-              //console.log(req);
-              var parentcat = params.cat;
-              var leftextent = 0; 
-              connection.query('select leftextent from tbl_categorymaster where id='+parentcat, function (error, results1, fields) {
-                  if (error) throw error;
-                  if(results1.length)
+        }
+        
+        const imagepath = 'public/uploads/categoryicon/'+req.file.filename;
+        sizeOf(imagepath, function (err, dimensions) {
+          //console.log(dimensions.width, dimensions.height);
+          if(dimensions.width==100 && dimensions.height==100)
+            {
+                // here in the req.file you will have the uploaded avatar file
+                var params  = JSON.parse(req.body.data);
+                
+                connection.query('select name from tbl_categorymaster where name="'+params.name+'" and cat="'+params.cat+'"', function (error, results, fields) {
+                  if(results.length == 0)
                   {
-                    var newstring=JSON.stringify(results1);
-                    var newjson =  JSON.parse(newstring);
-                    leftextent = newjson[0].leftextent;
-                  }
-                  
-                  //console.log(leftextent);
-
-                  connection.query('update tbl_categorymaster set leftextent=leftextent+2 where leftextent > '+leftextent, function (error, results, fields) {});
-                  connection.query('update tbl_categorymaster set rightextent=rightextent+2 where rightextent > '+leftextent, function (error, results, fields) {});
-                  connection.query('select sortorder from tbl_categorymaster order by sortorder desc limit 1', function (error, results2, fields) {
-                    if (error) throw error;
-                    var sortorder=0;
-                    if(results2.length)
-                    {
-                      var sortstring=JSON.stringify(results2);
-                      var sortjson =  JSON.parse(sortstring);
-                      sortorder = sortjson[0].sortorder+1;
-                    }
-
-                    params.leftextent=(leftextent+1);
-                    params.rightextent=(leftextent+2);
-                    params.slug=slug(params.name);
-                    params.date= new Date();
-                    params.categoryimage= req.file.filename;
-                    params.sortorder=sortorder;
-
-                    if (params.isactive == true)
-                    {
-                      params.isactive = 1;
-                    }
-                    else
-                    {
-                      params.isactive = 0;
-                    }
-                    
-                    connection.query('INSERT INTO `tbl_categorymaster` SET ?', params, function (error, Insertresults, fields) {
-                      if (error) throw error;
-                      if(Insertresults.insertId > 0)
-                        {
-                          var catid=Insertresults.insertId;
-                          if(parentcat!=0)
+                      //console.log(req);
+                      var parentcat = params.cat;
+                      var leftextent = 0; 
+                      connection.query('select leftextent from tbl_categorymaster where id='+parentcat, function (error, results1, fields) {
+                          if (error) throw error;
+                          if(results1.length)
                           {
-                            connection.query('select category from tbl_product where category=?', [parentcat], function (error, results, fields) {
-                              if(results.length)
-                              {
-                                connection.query('update tbl_product set category="'+catid+'" where category >', [parentcat], function (error, results, fields) {});
-                              }
-                            });
+                            var newstring=JSON.stringify(results1);
+                            var newjson =  JSON.parse(newstring);
+                            leftextent = newjson[0].leftextent;
                           }
-                          res.json({ Message:"success",Insertresults});
-                        }
+                          
+                          //console.log(leftextent);
+
+                          connection.query('update tbl_categorymaster set leftextent=leftextent+2 where leftextent > '+leftextent, function (error, results, fields) {});
+                          connection.query('update tbl_categorymaster set rightextent=rightextent+2 where rightextent > '+leftextent, function (error, results, fields) {});
+                          connection.query('select sortorder from tbl_categorymaster order by sortorder desc limit 1', function (error, results2, fields) {
+                            if (error) throw error;
+                            var sortorder=0;
+                            if(results2.length)
+                            {
+                              var sortstring=JSON.stringify(results2);
+                              var sortjson =  JSON.parse(sortstring);
+                              sortorder = sortjson[0].sortorder+1;
+                            }
+
+                            params.leftextent=(leftextent+1);
+                            params.rightextent=(leftextent+2);
+                            params.slug=slug(params.name);
+                            params.date= new Date();
+                            params.categoryimage= req.file.filename;
+                            params.sortorder=sortorder;
+
+                            if (params.isactive == true)
+                            {
+                              params.isactive = 1;
+                            }
+                            else
+                            {
+                              params.isactive = 0;
+                            }
+                            
+                            connection.query('INSERT INTO `tbl_categorymaster` SET ?', params, function (error, Insertresults, fields) {
+                              if (error) throw error;
+                              if(Insertresults.insertId > 0)
+                                {
+                                  var catid=Insertresults.insertId;
+                                  if(parentcat!=0)
+                                  {
+                                    connection.query('select category from tbl_product where category=?', [parentcat], function (error, results, fields) {
+                                      if(results.length)
+                                      {
+                                        connection.query('update tbl_product set category="'+catid+'" where category >', [parentcat], function (error, results, fields) {});
+                                      }
+                                    });
+                                  }
+                                  res.json({ Message:"success",Insertresults});
+                                }
+                            });
+                          });
+                        });
+                  }
+                  else
+                  {
+                    fs.unlink(imagepath, (err) => {
                     });
-                  });
+                    return res.send({ Message: 'Category name already exist. !!!'})
+                  }
                 });
-          }
-          else
-          {
-            fs.unlink(imagepath, (err) => {
-            });
-            return res.send({ Message: 'Category name already exist. !!!'})
-          }
+            }
+            else
+            {
+              fs.unlink(imagepath, (err) => {
+              });
+              return res.send({ Message: 'Image size must be 100px X 100px.'})
+            }
         });
       }
     });
@@ -173,69 +187,81 @@ var upload = multer({ storage: storage,limits: {
             return res.send({ Message: 'No file selected'})
         } 
 
-        // here in the req.file you will have the uploaded avatar file
-        var params  = JSON.parse(req.body.data);
         const imagepath = 'public/uploads/categoryicon/'+req.file.filename;
-        connection.query('select name from tbl_categorymaster where name="'+params.name+'" and cat="'+params.cat+'" and id !="'+params.id+'"', function (error, results, fields) {
-          if(results.length == 0)
-          {
-              //console.log(req);
-              var parentcat = params.cat;
-
-              if (params.isactive == true)
-              {
-                params.isactive = 1;
-              }
-              else
-              {
-                params.isactive = 0;
-              }
-
-              connection.query('select leftextent,rightextent,cat,categoryimage,sortorder from tbl_categorymaster where id='+params.id, function (error, results, fields) {
-                if (error) throw error;
-                if(results.length)
+        sizeOf(imagepath, function (err, dimensions) {
+          //console.log(dimensions.width, dimensions.height);
+          if(dimensions.width==100 && dimensions.height==100)
+            {
+              // here in the req.file you will have the uploaded avatar file
+              var params  = JSON.parse(req.body.data);
+              connection.query('select name from tbl_categorymaster where name="'+params.name+'" and cat="'+params.cat+'" and id !="'+params.id+'"', function (error, results, fields) {
+                if(results.length == 0)
                 {
-                  var newstring=JSON.stringify(results);
-                  var newjson =  JSON.parse(newstring);
-                  leftextent = newjson[0].leftextent;
-                  rightextent = newjson[0].leftextent;
-                  parentcat = newjson[0].cat;
-                  oldcategoryimage = newjson[0].categoryimage;
-                  oldsortorder = newjson[0].sortorder;
+                    //console.log(req);
+                    var parentcat = params.cat;
 
-                  const unlinkimagepath = 'public/uploads/categoryicon/'+oldcategoryimage;
-                  fs.unlink(unlinkimagepath, (err) => {});
+                    if (params.isactive == true)
+                    {
+                      params.isactive = 1;
+                    }
+                    else
+                    {
+                      params.isactive = 0;
+                    }
 
-                  if(parentcat!=0)
-                  {
-                    connection.query('update tbl_categorymaster set isactive='+params.isactive+' where leftextent >= '+leftextent+' and rightextent <= '+rightextent, function (error, results, fields) {
+                    connection.query('select leftextent,rightextent,cat,categoryimage,sortorder from tbl_categorymaster where id='+params.id, function (error, results, fields) {
                       if (error) throw error;
-                    });
-                  }
+                      if(results.length)
+                      {
+                        var newstring=JSON.stringify(results);
+                        var newjson =  JSON.parse(newstring);
+                        leftextent = newjson[0].leftextent;
+                        rightextent = newjson[0].leftextent;
+                        parentcat = newjson[0].cat;
+                        oldcategoryimage = newjson[0].categoryimage;
+                        oldsortorder = newjson[0].sortorder;
 
-                  if(oldsortorder!=params.sortorder)
-                  {
-                    connection.query('update tbl_categorymaster set sortorder=sortorder+1 where id !='+params.id+' and sortorder >= '+params.sortorder, function (error, results, fields) {
-                      if (error) throw error;
-                    });
-                  }
-                  
-                  params.slug=slug(params.name);
-                  params.categoryimage= req.file.filename;
+                        const unlinkimagepath = 'public/uploads/categoryicon/'+oldcategoryimage;
+                        fs.unlink(unlinkimagepath, (err) => {});
 
-                  connection.query('UPDATE `tbl_categorymaster` SET `name`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`categoryimage`=?,`level`=? where `id`=?', [params.name, params.slug, params.cat, params.sortorder, params.isactive, params.categoryimage, params.level, params.id], function (error, results, fields) {
-                    if (error) throw error;
-                      res.json({ Message:"success",results});
+                        if(parentcat!=0)
+                        {
+                          connection.query('update tbl_categorymaster set isactive='+params.isactive+' where leftextent >= '+leftextent+' and rightextent <= '+rightextent, function (error, results, fields) {
+                            if (error) throw error;
+                          });
+                        }
+
+                        if(oldsortorder!=params.sortorder)
+                        {
+                          connection.query('update tbl_categorymaster set sortorder=sortorder+1 where id !='+params.id+' and sortorder >= '+params.sortorder, function (error, results, fields) {
+                            if (error) throw error;
+                          });
+                        }
+                        
+                        params.slug=slug(params.name);
+                        params.categoryimage= req.file.filename;
+
+                        connection.query('UPDATE `tbl_categorymaster` SET `name`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`categoryimage`=?,`level`=? where `id`=?', [params.name, params.slug, params.cat, params.sortorder, params.isactive, params.categoryimage, params.level, params.id], function (error, results, fields) {
+                          if (error) throw error;
+                            res.json({ Message:"success",results});
+                          });
+                      }
                     });
                 }
+                else
+                {
+                  fs.unlink(imagepath, (err) => {
+                  });
+                  return res.send({ Message: 'Category name already exist. !!!'})
+                }
               });
-          }
-          else
-          {
-            fs.unlink(imagepath, (err) => {
-            });
-            return res.send({ Message: 'Category name already exist. !!!'})
-          }
+            }
+            else
+            {
+              fs.unlink(imagepath, (err) => {
+              });
+              return res.send({ Message: 'Image size must be 100px X 100px.'})
+            }
         });
       }
     });
