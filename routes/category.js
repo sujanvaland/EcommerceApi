@@ -1,6 +1,4 @@
 const express = require('express');
-const logger = require('../logger/logger');
-const jwt = require('jsonwebtoken');
 const app = express();
 var connection = require('../config/db');
 var slug = require('slug')
@@ -73,7 +71,6 @@ var upload = multer({ storage: storage,limits: {
 
                   connection.query('update tbl_categorymaster set leftextent=leftextent+2 where leftextent > '+leftextent, function (error, results, fields) {});
                   connection.query('update tbl_categorymaster set rightextent=rightextent+2 where rightextent > '+leftextent, function (error, results, fields) {});
-                  
                   connection.query('select sortorder from tbl_categorymaster order by sortorder desc limit 1', function (error, results2, fields) {
                     if (error) throw error;
                     var sortorder=0;

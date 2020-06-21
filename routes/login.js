@@ -39,7 +39,6 @@ let refreshTokens = [];
 
 //rest api to create a new tbl_registration record into mysql database
 app.post('/register', function (req, res) {
-  console.log(req);
   var params  = req.body;
   connection.query('INSERT INTO `tbl_registration` SET ?', params, function (error, results, fields) {
      if (error) throw error;
