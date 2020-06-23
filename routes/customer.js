@@ -1,10 +1,6 @@
 const express = require('express');
-const logger = require('../logger/logger');
-const jwt = require('jsonwebtoken');
 const app = express();
 var connection = require('../config/db');
-const bcrypt = require("bcrypt");
-const saltRounds = 10;
 
   //rest api to get all customers
   app.get('/customer', function (req, res) {
@@ -53,35 +49,19 @@ const saltRounds = 10;
       if (error) throw error;
       if(results.length)
        {
-          var oldhash=results[0].password;
-          bcrypt.compare(params.OldPassword, oldhash, function(err, result) {
-            // result == true
-            if(result)
-            {
-              connection.query('select id from tbl_registration where userguid="'+req.headers.customerguid+'" and password="'+oldhash+'"', function (error, results, fields) {
-                if (error) throw error;
-                if(results.length)
-                  {
-                    bcrypt.hash(params.NewPassword, saltRounds, function(err, hash) {
-                      // Store hash in your password DB.
-                      connection.query('update tbl_registration set password="'+hash+'" where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
-                        if (error) throw error;
-                        res.json({ Message:"success"});
-                      });
-                    });
-                    
-                  }
-                  else
-                  {
-                    res.json({ Message:"Old password is wrong!."});
-                  }
-              });
-            }
-            else
-            {
-              res.json({ Message:"Old password is wrong!."});
-            }
-          
+          connection.query('select id from tbl_registration where userguid="'+req.headers.customerguid+'" and password="'+oldhash+'"', function (error, results, fields) {
+            if (error) throw error;
+            if(results.length)
+              {
+                connection.query('update tbl_registration set password="'+params.NewPassword+'" where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
+                  if (error) throw error;
+                  res.json({ Message:"success"});
+                });
+              }
+              else
+              {
+                res.json({ Message:"Old password is wrong!."});
+              }
           });
        }
     });

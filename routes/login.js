@@ -3,31 +3,11 @@ const logger = require('../logger/logger');
 const jwt = require('jsonwebtoken');
 const app = express();
 var connection = require('../config/db');
-const bcrypt = require("bcrypt");
+//const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
 /* Mailer Code Start */
 const nodemailer = require('nodemailer');
-
-// For Other Auth
-// let transport = nodemailer.createTransport({
-//     host: 'smtp.mailtrap.io',
-//     port: 2525,
-//     auth: {
-//        user: 'put_your_username_here',
-//        pass: 'put_your_password_here'
-//     }
-// });
-
-// For Gmail Auth
-// var transporter = nodemailer.createTransport({
-//   service: 'gmail',
-//   port:465,
-//   auth: {
-//     user: 'kunal1990patel@gmail.com',
-//     pass: '#######'
-//   }
-// });
 
 // For localhost Auth
 var transporter = nodemailer.createTransport({
@@ -68,38 +48,21 @@ app.post('/login',(req,res) =>{
   //Authenticate user
   const username = req.body.Email;
   const password = req.body.Password;
-  connection.query('SELECT password FROM `tbl_registration` WHERE username="'+username+'"', function (error, results, fields) {
+  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id FROM `tbl_registration` WHERE email="'+username+'" and password="'+password+'"', function (error, results, fields) {
     if (error) throw error;
     if(results.length)
     {
-      var hash=results[0].password;
-      bcrypt.compare(password, hash, function(err, result) {
-        // result == true
-        if(result)
-        {
-          connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id FROM `tbl_registration` WHERE username="'+username+'" and password="'+hash+'"', function (error, results, fields) {
-            if (error) throw error;
-            if(results.length)
-            {
-              const user = { userguid : results[0].userguid}
-              const accessToken = generateAccessToken(user)
-              const refreshToken = generateRefreshToken(user);
-              refreshTokens.push(refreshToken);
-              res.json({ Message:"success",results,accessToken : accessToken, refreshToken : refreshToken});
-            }
-            else
-            {
-              res.json({ Message:"Email or Password is wrong. Please Try Again.",results});
-            }
-            
-          });
-        }
-        else
-        {
-          res.json({ Message:"Email or Password is wrong. Please Try Again."});
-        }
-      });
+      const user = { userguid : results[0].userguid}
+      const accessToken = generateAccessToken(user)
+      const refreshToken = generateRefreshToken(user);
+      refreshTokens.push(refreshToken);
+      res.json({ Message:"success",results,accessToken : accessToken, refreshToken : refreshToken});
     }
+    else
+    {
+      res.json({ Message:"Email or Password is wrong. Please Try Again.",results});
+    }
+    
   });
   // res.json({ accessToken : accessToken, refreshToken : refreshToken});
 });
@@ -115,7 +78,7 @@ function generateRefreshToken(user){
 app.post('/PasswordRecovery',(req,res) =>{
   //Authenticate user
   const username = req.body.Email;
-  connection.query('SELECT email,userguid FROM `tbl_registration` WHERE username="'+username+'"', function (error, results, fields) {
+  connection.query('SELECT email,userguid FROM `tbl_registration` WHERE email="'+username+'"', function (error, results, fields) {
     if (error) throw error;
     if(results.length)
     {
