@@ -44,11 +44,12 @@ app.delete('/logout', (req,res) =>{
   res.sendStatus(204);
 });
 
+// Login For Admin
 app.post('/login',(req,res) =>{
   //Authenticate user
   const username = req.body.Email;
   const password = req.body.Password;
-  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id FROM `tbl_registration` WHERE email="'+username+'" and password="'+password+'"', function (error, results, fields) {
+  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id FROM `tbl_registration` WHERE username="'+username+'" and password="'+password+'" and role_id=1', function (error, results, fields) {
     if (error) throw error;
     if(results.length)
     {
@@ -60,7 +61,7 @@ app.post('/login',(req,res) =>{
     }
     else
     {
-      res.json({ Message:"Email or Password is wrong. Please Try Again.",results});
+      res.json({ Message:"Username or Password is wrong. Please Try Again.",results});
     }
     
   });

@@ -53,75 +53,66 @@ var upload = multer({ storage: storage,limits: {
         const imagepath = 'public/uploads/productimage/'+req.file.filename;
         sizeOf(imagepath, function (err, dimensions) {
           //console.log(dimensions.width, dimensions.height);
-          if(dimensions.width==100 && dimensions.height==100)
+          if(dimensions.width==560 && dimensions.height==374)
             {
                 // here in the req.file you will have the uploaded avatar file
                 var params  = JSON.parse(req.body.data);
                 
-                connection.query('select productname from tbl_product where productname="'+params.productname+'" and cat="'+params.cat+'"', function (error, results, fields) {
+                connection.query('select productname from tbl_product where productname="'+params.productname+'"', function (error, results, fields) {
                   if(results.length == 0)
                   {
-                      //console.log(req);
-                      var parentcat = params.cat;
-                      var leftextent = 0; 
-                      connection.query('select leftextent from tbl_product where id='+parentcat, function (error, results1, fields) {
-                          if (error) throw error;
-                          if(results1.length)
+                    //console.log(req);
+                    connection.query('select sortorder from tbl_product order by sortorder desc limit 1', function (error, results2, fields) {
+                      if (error) throw error;
+                      var sortorder=0;
+                      if(results2.length)
+                      {
+                        var sortstring=JSON.stringify(results2);
+                        var sortjson =  JSON.parse(sortstring);
+                        sortorder = sortjson[0].sortorder+1;
+                      }
+
+                      params.slug=slug(params.productname);
+                      params.created_date= new Date();
+                      params.productimage= req.file.filename;
+                      params.sortorder=sortorder;
+
+                      if (params.isnewarrival == true)
+                      {
+                        params.isnewarrival = 1;
+                      }
+                      else
+                      {
+                        params.isnewarrival = 0;
+                      }
+
+                      if (params.isactive == true)
+                      {
+                        params.isactive = 1;
+                      }
+                      else
+                      {
+                        params.isactive = 0;
+                      }
+
+                      if (params.instock == true)
+                      {
+                        params.instock = 1;
+                      }
+                      else
+                      {
+                        params.instock = 0;
+                      }
+                      
+                      connection.query('INSERT INTO `tbl_product` SET ?', params, function (error, Insertresults, fields) {
+                        if (error) throw error;
+                        if(Insertresults.insertId > 0)
                           {
-                            var newstring=JSON.stringify(results1);
-                            var newjson =  JSON.parse(newstring);
-                            leftextent = newjson[0].leftextent;
+                            //var productid=Insertresults.insertId;
+                            res.json({ Message:"success",Insertresults});
                           }
-                          
-                          //console.log(leftextent);
-
-                          connection.query('update tbl_product set leftextent=leftextent+2 where leftextent > '+leftextent, function (error, results, fields) {});
-                          connection.query('update tbl_product set rightextent=rightextent+2 where rightextent > '+leftextent, function (error, results, fields) {});
-                          connection.query('select sortorder from tbl_product order by sortorder desc limit 1', function (error, results2, fields) {
-                            if (error) throw error;
-                            var sortorder=0;
-                            if(results2.length)
-                            {
-                              var sortstring=JSON.stringify(results2);
-                              var sortjson =  JSON.parse(sortstring);
-                              sortorder = sortjson[0].sortorder+1;
-                            }
-
-                            params.leftextent=(leftextent+1);
-                            params.rightextent=(leftextent+2);
-                            params.slug=slug(params.productname);
-                            params.date= new Date();
-                            params.productimage= req.file.filename;
-                            params.sortorder=sortorder;
-
-                            if (params.isactive == true)
-                            {
-                              params.isactive = 1;
-                            }
-                            else
-                            {
-                              params.isactive = 0;
-                            }
-                            
-                            connection.query('INSERT INTO `tbl_product` SET ?', params, function (error, Insertresults, fields) {
-                              if (error) throw error;
-                              if(Insertresults.insertId > 0)
-                                {
-                                  var catid=Insertresults.insertId;
-                                  if(parentcat!=0)
-                                  {
-                                    connection.query('select product from tbl_product where product=?', [parentcat], function (error, results, fields) {
-                                      if(results.length)
-                                      {
-                                        connection.query('update tbl_product set product="'+catid+'" where product >', [parentcat], function (error, results, fields) {});
-                                      }
-                                    });
-                                  }
-                                  res.json({ Message:"success",Insertresults});
-                                }
-                            });
-                          });
-                        });
+                      });
+                    });
                   }
                   else
                   {
@@ -135,7 +126,7 @@ var upload = multer({ storage: storage,limits: {
             {
               fs.unlink(imagepath, (err) => {
               });
-              return res.send({ Message: 'Image size must be 100px X 100px.'})
+              return res.send({ Message: 'Image size must be 560px X 374px.'})
             }
         });
       }
@@ -190,15 +181,23 @@ var upload = multer({ storage: storage,limits: {
         const imagepath = 'public/uploads/productimage/'+req.file.filename;
         sizeOf(imagepath, function (err, dimensions) {
           //console.log(dimensions.width, dimensions.height);
-          if(dimensions.width==100 && dimensions.height==100)
+          if(dimensions.width==560 && dimensions.height==374)
             {
               // here in the req.file you will have the uploaded avatar file
               var params  = JSON.parse(req.body.data);
-              connection.query('select productname from tbl_product where productname="'+params.productname+'" and cat="'+params.cat+'" and id !="'+params.id+'"', function (error, results, fields) {
+              connection.query('select productname from tbl_product where productname="'+params.productname+'" and id !="'+params.id+'"', function (error, results, fields) {
                 if(results.length == 0)
                 {
                     //console.log(req);
-                    var parentcat = params.cat;
+                    
+                    if (params.isnewarrival == true)
+                    {
+                      params.isnewarrival = 1;
+                    }
+                    else
+                    {
+                      params.isnewarrival = 0;
+                    }
 
                     if (params.isactive == true)
                     {
@@ -209,27 +208,26 @@ var upload = multer({ storage: storage,limits: {
                       params.isactive = 0;
                     }
 
-                    connection.query('select leftextent,rightextent,cat,productimage,sortorder from tbl_product where id='+params.id, function (error, results, fields) {
+                    if (params.instock == true)
+                    {
+                      params.instock = 1;
+                    }
+                    else
+                    {
+                      params.instock = 0;
+                    }
+
+                    connection.query('select productimage,sortorder from tbl_product where id='+params.id, function (error, results, fields) {
                       if (error) throw error;
                       if(results.length)
                       {
                         var newstring=JSON.stringify(results);
                         var newjson =  JSON.parse(newstring);
-                        leftextent = newjson[0].leftextent;
-                        rightextent = newjson[0].leftextent;
-                        parentcat = newjson[0].cat;
                         oldproductimage = newjson[0].productimage;
                         oldsortorder = newjson[0].sortorder;
 
                         const unlinkimagepath = 'public/uploads/productimage/'+oldproductimage;
                         fs.unlink(unlinkimagepath, (err) => {});
-
-                        if(parentcat!=0)
-                        {
-                          connection.query('update tbl_product set isactive='+params.isactive+' where leftextent >= '+leftextent+' and rightextent <= '+rightextent, function (error, results, fields) {
-                            if (error) throw error;
-                          });
-                        }
 
                         if(oldsortorder!=params.sortorder)
                         {
@@ -239,9 +237,9 @@ var upload = multer({ storage: storage,limits: {
                         }
                         
                         params.slug=slug(params.productname);
-                        params.productimage= req.file.fileproductname;
+                        params.productimage= req.file.filename;
 
-                        connection.query('UPDATE `tbl_product` SET `productname`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`productimage`=?,`level`=? where `id`=?', [params.productname, params.slug, params.cat, params.sortorder, params.isactive, params.productimage, params.level, params.id], function (error, results, fields) {
+                        connection.query('UPDATE `tbl_product` SET `productname`=?,`slug`=?,`category`=?,`shortdesc`=?,`detaildesc`=?,`price`=?,`sortorder`=?,`isnewarrival`=?,`instock`=?,`isactive`=?,`productimage`=? where `id`=?', [params.productname, params.slug, params.category, params.shortdesc, params.detaildesc, params.price, params.sortorder, params.isnewarrival, params.instock, params.isactive, params.productimage, params.id], function (error, results, fields) {
                           if (error) throw error;
                             res.json({ Message:"success",results});
                           });
@@ -260,7 +258,7 @@ var upload = multer({ storage: storage,limits: {
             {
               fs.unlink(imagepath, (err) => {
               });
-              return res.send({ Message: 'Image size must be 100px X 100px.'})
+              return res.send({ Message: 'Image size must be 560px X 374px.'})
             }
         });
       }
@@ -271,11 +269,19 @@ var upload = multer({ storage: storage,limits: {
   app.post('/updatedata', function (req, res) {
     // here in the req.file you will have the uploaded avatar file
     var params  = req.body;
-    connection.query('select productname from tbl_product where productname="'+params.productname+'" and cat="'+params.cat+'" and id !="'+params.id+'"', function (error, results, fields) {
+    connection.query('select productname from tbl_product where productname="'+params.productname+'" and id !="'+params.id+'"', function (error, results, fields) {
       if(results.length == 0)
       {
           //console.log(req);
-          var parentcat = params.cat;
+          
+          if (params.isnewarrival == true)
+          {
+            params.isnewarrival = 1;
+          }
+          else
+          {
+            params.isnewarrival = 0;
+          }
 
           if (params.isactive == true)
           {
@@ -286,33 +292,34 @@ var upload = multer({ storage: storage,limits: {
             params.isactive = 0;
           }
 
-          connection.query('select leftextent,rightextent,cat,sortorder from tbl_product where id='+params.id, function (error, results, fields) {
+          if (params.instock == true)
+          {
+            params.instock = 1;
+          }
+          else
+          {
+            params.instock = 0;
+          }
+
+          connection.query('select sortorder from tbl_product where id='+params.id, function (error, results, fields) {
             if (error) throw error;
             if(results.length)
             {
               var newstring=JSON.stringify(results);
               var newjson =  JSON.parse(newstring);
-              leftextent = newjson[0].leftextent;
-              rightextent = newjson[0].leftextent;
-              parentcat = newjson[0].cat;
               oldsortorder = newjson[0].sortorder;
 
-              if(parentcat!=0)
-              {
-                connection.query('update tbl_product set isactive='+params.isactive+' where leftextent >= '+leftextent+' and rightextent <= '+rightextent, function (error, results, fields) {
-                  if (error) throw error;
-                });
-              }
-
+              
               if(oldsortorder!=params.sortorder)
               {
                 connection.query('update tbl_product set sortorder=sortorder+1 where id !='+params.id+' and sortorder >= '+params.sortorder, function (error, results, fields) {
                   if (error) throw error;
                 });
               }
-
+              
               params.slug=slug(params.productname);
-              connection.query('UPDATE `tbl_product` SET `productname`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`level`=? where `id`=?', [params.productname, params.slug, params.cat, params.sortorder, params.isactive, params.level, params.id], function (error, results, fields) {
+
+              connection.query('UPDATE `tbl_product` SET `productname`=?,`slug`=?,`category`=?,`shortdesc`=?,`detaildesc`=?,`price`=?,`sortorder`=?,`isnewarrival`=?,`instock`=?,`isactive`=? where `id`=?', [params.productname, params.slug, params.category, params.shortdesc, params.detaildesc, params.price, params.sortorder, params.isnewarrival, params.instock, params.isactive, params.id], function (error, results, fields) {
                 if (error) throw error;
                   res.json({ Message:"success",results});
                 });

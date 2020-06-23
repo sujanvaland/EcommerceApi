@@ -353,5 +353,13 @@ var upload = multer({ storage: storage,limits: {
     });
     
   });
+
+  //rest api to get all category
+  app.get('/all_active_category', function (req, res) {
+    connection.query('select id,name from tbl_categorymaster where isactive=1 order by sortorder asc', function (error, results, fields) {
+       if (error) throw error;
+       res.send(results);
+     });
+  });
   
   module.exports = app;

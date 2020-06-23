@@ -5,5 +5,6 @@ var app = express();
 app.use(express.static('public'));
 app.use(express.static('uploads'));
 app.use(express.static('categoryicon'));
+app.use(express.static('productimage'));
 
 var server = app.listen(5000);
