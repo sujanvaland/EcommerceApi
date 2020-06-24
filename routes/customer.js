@@ -9,10 +9,34 @@ var connection = require('../config/db');
        res.send(results);
      });
   });
+  
+  app.get('/GetAllCustomers', function (req, res) {
+    connection.query('select id,firstname,lastname,email,phone,userguid,username,role_id,isactive from tbl_registration where role_id=3', function (error, results, fields) {
+       if (error) throw error;
+       res.send(results);
+     });
+  });
+
+  //rest api to get filter customer
+  app.get('/GetAllCustomers/:name', function (req, res) {
+    connection.query('select id,firstname,lastname,email,phone,userguid,username,role_id,isactive from tbl_registration where role_id=3 and (firstname like "%'+req.params.name+'%" or lastname like "%'+req.params.name+'%")', function (error, results, fields) {
+       if (error) throw error;
+       res.send(results);
+     });
+  });
+
+  //rest api to get a login customer data
+  app.post('/GetCustomerInfo', function (req, res) {
+    connection.query('select id,firstname,lastname,email,phone,userguid,username,role_id,isactive from tbl_registration where userguid=?', [req.body.CustomerGuid], function (error, results, fields) {
+       if (error) throw error;
+       res.send(results);
+     });
+  });
+  
 
   //rest api to get a login customer data
   app.get('/GetLoginCustomerInfo', function (req, res) {
-    connection.query('select id,firstname,lastname,email,phone,userguid,username,role_id from tbl_registration where userguid=?', [req.headers.customerguid], function (error, results, fields) {
+    connection.query('select id,firstname,lastname,email,phone,userguid,username,role_id,isactive from tbl_registration where userguid=?', [req.headers.customerguid], function (error, results, fields) {
        if (error) throw error;
        res.send(results);
      });
@@ -65,6 +89,26 @@ var connection = require('../config/db');
           });
        }
     });
+  });
+
+  //rest api to update record into mysql database
+  app.post('/lock_unlock_customer', function (req, res) {
+    // here in the req.file you will have the uploaded avatar file
+    var params  = req.body;
+    
+    if (params.isactive == true)
+    {
+      params.isactive = 1;
+    }
+    else
+    {
+      params.isactive = 0;
+    }
+
+    connection.query('UPDATE `tbl_registration` SET `isactive`=? where `userguid`=?', [params.isactive, params.userguid], function (error, results, fields) {
+      if (error) throw error;
+        res.json({ Message:"success",results});
+      });
   });
   
   module.exports = app;
