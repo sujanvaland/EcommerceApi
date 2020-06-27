@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 var connection = require('../config/db');
+const { v1: uuidv1 } = require('uuid');
 
   //rest api to get all deliverystaffs
   app.get('/deliverystaff', function (req, res) {
@@ -27,7 +28,7 @@ var connection = require('../config/db');
 
   //rest api to get a login deliverystaff data
   app.post('/GetDeliverystaffInfo', function (req, res) {
-    connection.query('select id,firstname,lastname,email,phone,userguid,username,role_id,isactive from tbl_registration where userguid="'+req.body.CustomerGuid+'" and role_id=2', function (error, results, fields) {
+    connection.query('select id,firstname,lastname,email,phone,userguid,username,role_id,isactive,password from tbl_registration where userguid="'+req.body.CustomerGuid+'" and role_id=2', function (error, results, fields) {
        if (error) throw error;
        res.send(results);
      });
@@ -105,10 +106,52 @@ var connection = require('../config/db');
       params.isactive = 0;
     }
 
-    connection.query('UPDATE `tbl_registration` SET `isactive`=? where `userguid`=?', [params.isactive, params.userguid], function (error, results, fields) {
-      if (error) throw error;
-        res.json({ Message:"success",results});
-      });
+    connection.query('select username from tbl_registration where username="'+params.username+'" and userguid!="'+params.userguid+'"', function (error, results, fields) {
+      if(results.length == 0)
+      {
+          connection.query('UPDATE `tbl_registration` SET `firstname`=?,`lastname`=?,`email`=?,`phone`=?,`username`=?,`password`=?,`isactive`=? where `userguid`=?', [params.firstname,params.lastname,params.email,params.phone,params.username,params.password,params.isactive,params.userguid], function (error, results, fields) {
+            if (error) throw error;
+              res.json({ Message:"success",results});
+            });
+      }
+      else
+      {
+        return res.send({ Message: 'Username already exist. !!!'})
+      }
+    });
+  });
+
+  app.post('/deliverystaff', function (req, res) {
+    // here in the req.file you will have the uploaded avatar file
+    var params  = req.body;
+    
+    connection.query('select username from tbl_registration where username="'+params.username+'"', function (error, results, fields) {
+      if(results.length == 0)
+      {
+          //console.log(req);
+          params.registration_date= new Date();
+          params.userguid=uuidv1();
+          params.role_id=2;
+
+          if (params.isactive == true)
+          {
+            params.isactive = 1;
+          }
+          else
+          {
+            params.isactive = 0;
+          }
+                
+          connection.query('INSERT INTO `tbl_registration` SET ?', params, function (error, Insertresults, fields) {
+            if (error) throw error;
+            res.json({ Message:"success",Insertresults});
+          });
+      }
+      else
+      {
+        return res.send({ Message: 'Username already exist. !!!'})
+      }
+    });
   });
   
   module.exports = app;

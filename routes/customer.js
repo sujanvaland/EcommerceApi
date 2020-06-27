@@ -110,5 +110,28 @@ var connection = require('../config/db');
         res.json({ Message:"success",results});
       });
   });
+
+  //rest api to get a customer address data
+  app.post('/GetAllCustomeraddress', function (req, res) {
+    connection.query('select id,bfirstname,blastname,bphone,door_no_build_no_street,locality,landmark,bcity,bzipcode,isdefault from tbl_manage_address where userguid="'+req.body.userguid+'"', function (error, results, fields) {
+      if (error) throw error;
+      res.send(results);
+    });
+  });
+
+  //rest api to get filter customer
+  app.get('/GetAllCustomeraddress/:userguid/:name', function (req, res) {
+    connection.query('select id,bfirstname,blastname,bphone,door_no_build_no_street,locality,landmark,bcity,bzipcode,isdefault from tbl_manage_address where userguid="'+req.params.userguid+'" and (bfirstname like "%'+req.params.name+'%" or blastname like "%'+req.params.name+'%")', function (error, results, fields) {
+       if (error) throw error;
+       res.send(results);
+     });
+  });
+
+  app.get('/GetAllCustomeraddress/:userguid', function (req, res) {
+    connection.query('select id,bfirstname,blastname,bphone,door_no_build_no_street,locality,landmark,bcity,bzipcode,isdefault from tbl_manage_address where userguid="'+req.params.userguid+'"', function (error, results, fields) {
+       if (error) throw error;
+       res.send(results);
+     });
+  });
   
   module.exports = app;

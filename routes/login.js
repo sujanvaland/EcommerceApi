@@ -68,6 +68,54 @@ app.post('/login',(req,res) =>{
   // res.json({ accessToken : accessToken, refreshToken : refreshToken});
 });
 
+// Login For Delivery Staff
+app.post('/deliverystaff_login',(req,res) =>{
+  //Authenticate user
+  const username = req.body.Email;
+  const password = req.body.Password;
+  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id FROM `tbl_registration` WHERE username="'+username+'" and password="'+password+'" and role_id=2', function (error, results, fields) {
+    if (error) throw error;
+    if(results.length)
+    {
+      const user = { userguid : results[0].userguid}
+      const accessToken = generateAccessToken(user)
+      const refreshToken = generateRefreshToken(user);
+      refreshTokens.push(refreshToken);
+      res.json({ Message:"success",results,accessToken : accessToken, refreshToken : refreshToken});
+    }
+    else
+    {
+      res.json({ Message:"Username or Password is wrong. Please Try Again.",results});
+    }
+    
+  });
+  // res.json({ accessToken : accessToken, refreshToken : refreshToken});
+});
+
+// Login For Customer
+app.post('/customer_login',(req,res) =>{
+  //Authenticate user
+  const username = req.body.Email;
+  const password = req.body.Password;
+  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id FROM `tbl_registration` WHERE username="'+username+'" and password="'+password+'" and role_id=3', function (error, results, fields) {
+    if (error) throw error;
+    if(results.length)
+    {
+      const user = { userguid : results[0].userguid}
+      const accessToken = generateAccessToken(user)
+      const refreshToken = generateRefreshToken(user);
+      refreshTokens.push(refreshToken);
+      res.json({ Message:"success",results,accessToken : accessToken, refreshToken : refreshToken});
+    }
+    else
+    {
+      res.json({ Message:"Username or Password is wrong. Please Try Again.",results});
+    }
+    
+  });
+  // res.json({ accessToken : accessToken, refreshToken : refreshToken});
+});
+
 function generateAccessToken(user){
   return jwt.sign(user,process.env.ACCESS_TOKEN_SECRET)
 }

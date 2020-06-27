@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
 
   // By default, multer removes file extensions so let's add them back
   filename: function(req, file, cb) {
-    if (!file.originalname.match(/\.(jpg|png|jpeg|JPG|PNG|JPEG)$/)) {
+    if (!file.originalname.match(/\.(svg|SVG)$/)) {
       var err = new Error();
       err.code = 'filetype';
       return cb(err);
@@ -53,8 +53,8 @@ var upload = multer({ storage: storage,limits: {
         const imagepath = 'public/uploads/categoryicon/'+req.file.filename;
         sizeOf(imagepath, function (err, dimensions) {
           //console.log(dimensions.width, dimensions.height);
-          if(dimensions.width==100 && dimensions.height==100)
-            {
+          // if(dimensions.width==100 && dimensions.height==100)
+          //   {
                 // here in the req.file you will have the uploaded avatar file
                 var params  = JSON.parse(req.body.data);
                 
@@ -130,13 +130,13 @@ var upload = multer({ storage: storage,limits: {
                     return res.send({ Message: 'Category name already exist. !!!'})
                   }
                 });
-            }
-            else
-            {
-              fs.unlink(imagepath, (err) => {
-              });
-              return res.send({ Message: 'Image size must be 100px X 100px.'})
-            }
+            // }
+            // else
+            // {
+            //   fs.unlink(imagepath, (err) => {
+            //   });
+            //   return res.send({ Message: 'Image size must be 100px X 100px.'})
+            // }
         });
       }
     });
@@ -190,8 +190,8 @@ var upload = multer({ storage: storage,limits: {
         const imagepath = 'public/uploads/categoryicon/'+req.file.filename;
         sizeOf(imagepath, function (err, dimensions) {
           //console.log(dimensions.width, dimensions.height);
-          if(dimensions.width==100 && dimensions.height==100)
-            {
+          // if(dimensions.width==100 && dimensions.height==100)
+          //   {
               // here in the req.file you will have the uploaded avatar file
               var params  = JSON.parse(req.body.data);
               connection.query('select name from tbl_categorymaster where name="'+params.name+'" and cat="'+params.cat+'" and id !="'+params.id+'"', function (error, results, fields) {
@@ -241,7 +241,7 @@ var upload = multer({ storage: storage,limits: {
                         params.slug=slug(params.name);
                         params.categoryimage= req.file.filename;
 
-                        connection.query('UPDATE `tbl_categorymaster` SET `name`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`categoryimage`=?,`level`=? where `id`=?', [params.name, params.slug, params.cat, params.sortorder, params.isactive, params.categoryimage, params.level, params.id], function (error, results, fields) {
+                        connection.query('UPDATE `tbl_categorymaster` SET `name`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`categoryimage`=?,`level`=?,`shortdesc`=? where `id`=?', [params.name, params.slug, params.cat, params.sortorder, params.isactive, params.categoryimage, params.level, parms.shortdesc, params.id], function (error, results, fields) {
                           if (error) throw error;
                             res.json({ Message:"success",results});
                           });
@@ -255,13 +255,13 @@ var upload = multer({ storage: storage,limits: {
                   return res.send({ Message: 'Category name already exist. !!!'})
                 }
               });
-            }
-            else
-            {
-              fs.unlink(imagepath, (err) => {
-              });
-              return res.send({ Message: 'Image size must be 100px X 100px.'})
-            }
+            // }
+            // else
+            // {
+            //   fs.unlink(imagepath, (err) => {
+            //   });
+            //   return res.send({ Message: 'Image size must be 100px X 100px.'})
+            // }
         });
       }
     });
@@ -312,7 +312,7 @@ var upload = multer({ storage: storage,limits: {
               }
 
               params.slug=slug(params.name);
-              connection.query('UPDATE `tbl_categorymaster` SET `name`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`level`=? where `id`=?', [params.name, params.slug, params.cat, params.sortorder, params.isactive, params.level, params.id], function (error, results, fields) {
+              connection.query('UPDATE `tbl_categorymaster` SET `name`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`level`=?,`shortdesc`=? where `id`=?', [params.name, params.slug, params.cat, params.sortorder, params.isactive, params.level, params.shortdesc, params.id], function (error, results, fields) {
                 if (error) throw error;
                   res.json({ Message:"success",results});
                 });
