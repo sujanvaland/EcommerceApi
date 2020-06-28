@@ -12,7 +12,7 @@ var sizeOf = require('image-size');
 app.get('/category', function (req, res) {
   connection.query('select * from tbl_categorymaster where isactive=1 order by sortorder asc', function (error, results, fields) {
       if (error) throw error;
-      res.send(results);
+      res.json({ Message:"success",results});
     });
 });
 
@@ -20,7 +20,7 @@ app.get('/category', function (req, res) {
 app.post('/categorydetail', function (req, res) {
   connection.query('select * from tbl_categorymaster where id=?', [req.body.id], function (error, results, fields) {
       if (error) throw error;
-      res.send(results);
+      res.json({ Message:"success",results});
     });
 });
   

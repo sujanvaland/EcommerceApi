@@ -12,7 +12,7 @@ var sizeOf = require('image-size');
 app.get('/product', function (req, res) {
   connection.query('select * from tbl_product where isactive=1 order by sortorder asc', function (error, results, fields) {
       if (error) throw error;
-      res.send(results);
+      res.json({ Message:"success",results});
     });
 });
 
@@ -20,7 +20,7 @@ app.get('/product', function (req, res) {
 app.post('/productlistbycategory', function (req, res) {
   connection.query('select * from tbl_product where category="'+req.body.cat+'" and isactive=1 order by sortorder asc', function (error, results, fields) {
       if (error) throw error;
-      res.send(results);
+      res.json({ Message:"success",results});
     });
 });
 
@@ -28,7 +28,7 @@ app.post('/productlistbycategory', function (req, res) {
 app.post('/productdetail', function (req, res) {
   connection.query('select * from tbl_product where id=?', [req.body.id], function (error, results, fields) {
       if (error) throw error;
-      res.send(results);
+      res.json({ Message:"success",results});
     });
 });
   
