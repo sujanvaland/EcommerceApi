@@ -53,7 +53,7 @@ var upload = multer({ storage: storage,limits: {
         const imagepath = 'public/uploads/productimage/'+req.file.filename;
         sizeOf(imagepath, function (err, dimensions) {
           //console.log(dimensions.width, dimensions.height);
-          if(dimensions.width==560 && dimensions.height==374)
+          if(dimensions.width==605 && dimensions.height==380)
             {
                 // here in the req.file you will have the uploaded avatar file
                 var params  = JSON.parse(req.body.data);
@@ -126,7 +126,7 @@ var upload = multer({ storage: storage,limits: {
             {
               fs.unlink(imagepath, (err) => {
               });
-              return res.send({ Message: 'Image size must be 560px X 374px.'})
+              return res.send({ Message: 'Recommended image size is 605px X 380px.'})
             }
         });
       }
@@ -181,7 +181,7 @@ var upload = multer({ storage: storage,limits: {
         const imagepath = 'public/uploads/productimage/'+req.file.filename;
         sizeOf(imagepath, function (err, dimensions) {
           //console.log(dimensions.width, dimensions.height);
-          if(dimensions.width==560 && dimensions.height==374)
+          if(dimensions.width<=605 && dimensions.height<=380)
             {
               // here in the req.file you will have the uploaded avatar file
               var params  = JSON.parse(req.body.data);
@@ -258,7 +258,7 @@ var upload = multer({ storage: storage,limits: {
             {
               fs.unlink(imagepath, (err) => {
               });
-              return res.send({ Message: 'Image size must be 560px X 374px.'})
+              return res.send({ Message: 'Recommended image size is 605px X 380px.'})
             }
         });
       }

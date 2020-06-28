@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
 
   // By default, multer removes file extensions so let's add them back
   filename: function(req, file, cb) {
-    if (!file.originalname.match(/\.(svg|SVG)$/)) {
+    if (!file.originalname.match(/\.(png|PNG)$/)) {
       var err = new Error();
       err.code = 'filetype';
       return cb(err);
@@ -52,9 +52,9 @@ var upload = multer({ storage: storage,limits: {
         
         const imagepath = 'public/uploads/categoryicon/'+req.file.filename;
         sizeOf(imagepath, function (err, dimensions) {
-          //console.log(dimensions.width, dimensions.height);
-          // if(dimensions.width==100 && dimensions.height==100)
-          //   {
+          console.log(dimensions.width, dimensions.height);
+          if(dimensions.width<=125 && dimensions.height<=125)
+            {
                 // here in the req.file you will have the uploaded avatar file
                 var params  = JSON.parse(req.body.data);
                 
@@ -130,13 +130,13 @@ var upload = multer({ storage: storage,limits: {
                     return res.send({ Message: 'Category name already exist. !!!'})
                   }
                 });
-            // }
-            // else
-            // {
-            //   fs.unlink(imagepath, (err) => {
-            //   });
-            //   return res.send({ Message: 'Image size must be 100px X 100px.'})
-            // }
+            }
+            else
+            {
+              fs.unlink(imagepath, (err) => {
+              });
+              return res.send({ Message: 'Recommended image size is 125px X 125px.'})
+            }
         });
       }
     });
@@ -189,9 +189,9 @@ var upload = multer({ storage: storage,limits: {
 
         const imagepath = 'public/uploads/categoryicon/'+req.file.filename;
         sizeOf(imagepath, function (err, dimensions) {
-          //console.log(dimensions.width, dimensions.height);
-          // if(dimensions.width==100 && dimensions.height==100)
-          //   {
+          console.log(dimensions.width, dimensions.height);
+          if(dimensions.width<=125 && dimensions.height<=125)
+            {
               // here in the req.file you will have the uploaded avatar file
               var params  = JSON.parse(req.body.data);
               connection.query('select name from tbl_categorymaster where name="'+params.name+'" and cat="'+params.cat+'" and id !="'+params.id+'"', function (error, results, fields) {
@@ -255,13 +255,13 @@ var upload = multer({ storage: storage,limits: {
                   return res.send({ Message: 'Category name already exist. !!!'})
                 }
               });
-            // }
-            // else
-            // {
-            //   fs.unlink(imagepath, (err) => {
-            //   });
-            //   return res.send({ Message: 'Image size must be 100px X 100px.'})
-            // }
+            }
+            else
+            {
+              fs.unlink(imagepath, (err) => {
+              });
+              return res.send({ Message: 'Recommended image size is 125px X 125px.'})
+            }
         });
       }
     });
