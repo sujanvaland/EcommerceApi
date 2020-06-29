@@ -135,7 +135,7 @@ var upload = multer({ storage: storage,limits: {
 
   //rest api to get all product
   app.get('/product', function (req, res) {
-    connection.query('select * from tbl_product', function (error, results, fields) {
+    connection.query('select *,(select name from tbl_categorymaster where id=tbl_product.category) as categoryname from tbl_product', function (error, results, fields) {
        if (error) throw error;
        res.send(results);
      });
@@ -143,7 +143,7 @@ var upload = multer({ storage: storage,limits: {
 
   //rest api to get filter product
   app.get('/product/:productname', function (req, res) {
-    connection.query('select * from tbl_product where productname like "%'+req.params.productname+'%"', function (error, results, fields) {
+    connection.query('select *,(select name from tbl_categorymaster where id=tbl_product.category) as categoryname from tbl_product where productname like "%'+req.params.productname+'%"', function (error, results, fields) {
        if (error) throw error;
        res.send(results);
      });
