@@ -3,6 +3,7 @@ const logger = require('../logger/logger');
 const jwt = require('jsonwebtoken');
 const app = express();
 var connection = require('../config/db');
+const { v1: uuidv1 } = require('uuid');
 //const bcrypt = require("bcrypt");
 const saltRounds = 10;
 
@@ -11,7 +12,8 @@ const nodemailer = require('nodemailer');
 
 // For localhost Auth
 var transporter = nodemailer.createTransport({
-  host: '125.0.0.1',
+  //host: '125.0.0.1',
+  host: '45.35.0.114',
   port:25
 });
 
@@ -132,7 +134,7 @@ app.post('/PasswordRecovery',(req,res) =>{
     if(results.length)
     {
       var mailOptions = {
-        from: 'iampatelprince@gmail.com',
+        from: 'kunal1990patel@gmail.com',
         to: results.email,
         subject: 'Password Recovery Mail',
         text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
@@ -160,6 +162,59 @@ app.post('/PasswordRecovery',(req,res) =>{
 
   
   // res.json({ accessToken : accessToken, refreshToken : refreshToken});
+});
+
+// Signup For Customer
+app.post('/customer_signup', function (req, res) {
+  // here in the req.file you will have the uploaded avatar file
+  var params  = req.body;
+  
+  connection.query('select username from tbl_registration where username="'+params.username+'"', function (error, results, fields) {
+    if(results.length == 0)
+    {
+        //console.log(req);
+        params.registration_date= new Date();
+        params.userguid=uuidv1();
+        params.role_id=3;
+        params.send_otp=Math.floor(100000 + Math.random() * 900000);
+        params.isactive = 0;
+              
+        connection.query('INSERT INTO `tbl_registration` SET ?', params, function (error, Insertresults, fields) {
+          if (error) throw error;
+
+          if(Insertresults.insertId > 0)
+            {
+              var mailOptions = {
+                from: 'kunal1990patel@gmail.com',
+                to: results.email,
+                subject: 'Send OTP Mail',
+                text: 'Verify your account.\n\n' +
+                'Below is your one time passcode:\n\n' +
+                 params.send_otp + '\n\n' +
+                'We are here to help if you need it.\n'
+              };
+              
+              transporter.sendMail(mailOptions, function(error, info){
+                if (error) {
+                  console.log(error);
+                } else {
+                  console.log('Email sent: ' + info.response);
+                }
+              });
+
+              res.json({ Message:"success",Insertresults});
+            }
+          else
+          {
+            return res.send({ Message: 'Something went wrong. !!!'})
+          }
+        });
+    }
+    else
+    {
+      return res.send({ Message: 'Username already exist. !!!'})
+    }
+  });
 });
 
 module.exports = app;
