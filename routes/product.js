@@ -53,7 +53,7 @@ var upload = multer({ storage: storage,limits: {
         const imagepath = 'public/uploads/productimage/'+req.file.filename;
         sizeOf(imagepath, function (err, dimensions) {
           //console.log(dimensions.width, dimensions.height);
-          if(dimensions.width==605 && dimensions.height==380)
+          if(dimensions.width<=605 && dimensions.height<=380)
             {
                 // here in the req.file you will have the uploaded avatar file
                 var params  = JSON.parse(req.body.data);
@@ -239,7 +239,7 @@ var upload = multer({ storage: storage,limits: {
                         params.slug=slug(params.productname);
                         params.productimage= req.file.filename;
 
-                        connection.query('UPDATE `tbl_product` SET `productname`=?,`slug`=?,`category`=?,`shortdesc`=?,`detaildesc`=?,`price`=?,`sortorder`=?,`isnewarrival`=?,`instock`=?,`isactive`=?,`productimage`=? where `id`=?', [params.productname, params.slug, params.category, params.shortdesc, params.detaildesc, params.price, params.sortorder, params.isnewarrival, params.instock, params.isactive, params.productimage, params.id], function (error, results, fields) {
+                        connection.query('UPDATE `tbl_product` SET `productname`=?,`slug`=?,`category`=?,`shortdesc`=?,`detaildesc`=?,`pieces`=?,`net_weight`=?,`price`=?,`sortorder`=?,`isnewarrival`=?,`instock`=?,`isactive`=?,`productimage`=? where `id`=?', [params.productname, params.slug, params.category, params.shortdesc, params.detaildesc, params.pieces, params.net_weight, params.price, params.sortorder, params.isnewarrival, params.instock, params.isactive, params.productimage, params.id], function (error, results, fields) {
                           if (error) throw error;
                             res.json({ Message:"success",results});
                           });
@@ -319,7 +319,7 @@ var upload = multer({ storage: storage,limits: {
               
               params.slug=slug(params.productname);
 
-              connection.query('UPDATE `tbl_product` SET `productname`=?,`slug`=?,`category`=?,`shortdesc`=?,`detaildesc`=?,`price`=?,`sortorder`=?,`isnewarrival`=?,`instock`=?,`isactive`=? where `id`=?', [params.productname, params.slug, params.category, params.shortdesc, params.detaildesc, params.price, params.sortorder, params.isnewarrival, params.instock, params.isactive, params.id], function (error, results, fields) {
+              connection.query('UPDATE `tbl_product` SET `productname`=?,`slug`=?,`category`=?,`shortdesc`=?,`detaildesc`=?,`pieces`=?,`net_weight`=?,`price`=?,`sortorder`=?,`isnewarrival`=?,`instock`=?,`isactive`=? where `id`=?', [params.productname, params.slug, params.category, params.shortdesc, params.detaildesc, params.pieces, params.net_weight, params.price, params.sortorder, params.isnewarrival, params.instock, params.isactive, params.id], function (error, results, fields) {
                 if (error) throw error;
                   res.json({ Message:"success",results});
                 });
