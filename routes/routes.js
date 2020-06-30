@@ -12,5 +12,6 @@ apiRouter.use('/deliverystaff',authenticateToken, require('./deliverystaff'));
 
 apiRouter.use('/appcategory', require('./appcategory'));
 apiRouter.use('/appproduct', require('./appproduct'));
+apiRouter.use('/account',authenticateToken, require('./account'));
 
 module.exports = apiRouter;
