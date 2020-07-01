@@ -250,7 +250,7 @@ app.post('/customer_signup', function (req, res) {
   });
 });
 
-// Login For Customer
+// Verification For Customer
 app.post('/verify_customer',(req,res) =>{
   //Authenticate user
   const username = req.body.username;
@@ -271,6 +271,46 @@ app.post('/verify_customer',(req,res) =>{
     else
     {
       res.json({ Message:"Enter correct OTP. Please Try Again.",results});
+    }
+    
+  });
+  // res.json({ accessToken : accessToken, refreshToken : refreshToken});
+});
+
+// Reset Password For Customer
+app.post('/customer_reset_password',(req,res) =>{
+  //Authenticate user
+  const username = req.body.username;
+  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id FROM `tbl_registration` WHERE username="'+username+'"', function (error, results, fields) {
+    if (error) throw error;
+    if(results.length)
+    {
+      var tamppassword=Math.floor(10000000 + Math.random() * 90000000);
+      connection.query('update tbl_registration set password="'+tamppassword+'" where username="'+username+'"', function (error, results1, fields) {
+        var mailOptions = {
+          from: fromemail,
+          to: results.email,
+          subject: 'Password Recovery Mail',
+          text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
+          'Please use temporary password, or change this into your mobile application to complete the process:\n\n' +
+          'Temporary password is : ' + tamppassword + '\n\n' +
+          'Do not share anyone.\n'
+        };
+        
+        transporter.sendMail(mailOptions, function(error, info){
+          if (error) {
+            console.log(error);
+          } else {
+            console.log('Email sent: ' + info.response);
+          }
+        });
+        
+        res.json({ Message:"success",results});
+      });
+    }
+    else
+    {
+      res.json({ Message:"missing_required_fields:email"});
     }
     
   });
