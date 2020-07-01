@@ -21,6 +21,8 @@ var transporter = nodemailer.createTransport({
   
 let refreshTokens = [];
 
+let fromemail = 'kunal1990patel@gmail.com';
+
 //rest api to create a new tbl_registration record into mysql database
 app.post('/register', function (req, res) {
   var params  = req.body;
@@ -103,11 +105,41 @@ app.post('/customer_login',(req,res) =>{
     if (error) throw error;
     if(results.length)
     {
-      const user = { userguid : results[0].userguid}
-      const accessToken = generateAccessToken(user)
-      const refreshToken = generateRefreshToken(user);
-      refreshTokens.push(refreshToken);
-      res.json({ Message:"success",results,accessToken : accessToken, refreshToken : refreshToken});
+      const isactive = { isactive : results[0].isactive}
+      if(isactive=='1')
+      {
+        const user = { userguid : results[0].userguid}
+        const accessToken = generateAccessToken(user)
+        const refreshToken = generateRefreshToken(user);
+        refreshTokens.push(refreshToken);
+        res.json({ Message:"success",results,accessToken : accessToken, refreshToken : refreshToken});
+      }
+      else
+      {
+        var send_otp=results[0].send_otp;
+        var toemail=results[0].email;
+
+        var mailOptions = {
+          from: fromemail,
+          to: toemail,
+          subject: 'Send OTP Mail',
+          text: 'Verify your account.\n\n' +
+          'Below is your one time passcode:\n\n' +
+           send_otp + '\n\n' +
+          'We are here to help if you need it.\n'
+        };
+        
+        transporter.sendMail(mailOptions, function(error, info){
+          if (error) {
+            console.log(error);
+          } else {
+            console.log('Email sent: ' + info.response);
+          }
+        });
+
+        res.json({ Message:"Please Verify Your Account.",results});
+      }
+      
     }
     else
     {
@@ -134,7 +166,7 @@ app.post('/PasswordRecovery',(req,res) =>{
     if(results.length)
     {
       var mailOptions = {
-        from: 'kunal1990patel@gmail.com',
+        from: fromemail,
         to: results.email,
         subject: 'Password Recovery Mail',
         text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
@@ -176,7 +208,8 @@ app.post('/customer_signup', function (req, res) {
         params.registration_date= new Date();
         params.userguid=uuidv1();
         params.role_id=3;
-        params.send_otp=Math.floor(100000 + Math.random() * 900000);
+        //params.send_otp=Math.floor(1000 + Math.random() * 9000);
+        params.send_otp='0000';
         params.isactive = 0;
               
         connection.query('INSERT INTO `tbl_registration` SET ?', params, function (error, Insertresults, fields) {
@@ -185,7 +218,7 @@ app.post('/customer_signup', function (req, res) {
           if(Insertresults.insertId > 0)
             {
               var mailOptions = {
-                from: 'kunal1990patel@gmail.com',
+                from: fromemail,
                 to: results.email,
                 subject: 'Send OTP Mail',
                 text: 'Verify your account.\n\n' +
@@ -212,9 +245,36 @@ app.post('/customer_signup', function (req, res) {
     }
     else
     {
-      return res.send({ Message: 'Username already exist. !!!'})
+      return res.send({ Message: 'not_unique:login'})
     }
   });
+});
+
+// Login For Customer
+app.post('/verify_customer',(req,res) =>{
+  //Authenticate user
+  const username = req.body.username;
+  const send_otp = req.body.send_otp;
+  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id,password FROM `tbl_registration` WHERE username="'+username+'" and send_otp="'+send_otp+'"', function (error, results, fields) {
+    if (error) throw error;
+    if(results.length)
+    {
+      connection.query('update tbl_registration set isactive=1 where username="'+username+'"', function (error, results1, fields) {
+        if (error) throw error;
+        const user = { userguid : results[0].userguid}
+        const accessToken = generateAccessToken(user)
+        const refreshToken = generateRefreshToken(user);
+        refreshTokens.push(refreshToken);
+        res.json({ Message:"success",results,accessToken : accessToken, refreshToken : refreshToken});
+      });
+    }
+    else
+    {
+      res.json({ Message:"Enter correct OTP. Please Try Again.",results});
+    }
+    
+  });
+  // res.json({ accessToken : accessToken, refreshToken : refreshToken});
 });
 
 module.exports = app;
