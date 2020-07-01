@@ -255,7 +255,7 @@ app.post('/verify_customer',(req,res) =>{
   //Authenticate user
   const username = req.body.username;
   const send_otp = req.body.send_otp;
-  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id,password FROM `tbl_registration` WHERE username="'+username+'" and send_otp="'+send_otp+'"', function (error, results, fields) {
+  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id,password FROM `tbl_registration` WHERE username="'+username+'" and send_otp="'+send_otp+'" and role_id=3', function (error, results, fields) {
     if (error) throw error;
     if(results.length)
     {
@@ -281,7 +281,7 @@ app.post('/verify_customer',(req,res) =>{
 app.post('/customer_reset_password',(req,res) =>{
   //Authenticate user
   const username = req.body.username;
-  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id FROM `tbl_registration` WHERE username="'+username+'"', function (error, results, fields) {
+  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id FROM `tbl_registration` WHERE username="'+username+'" and role_id=3', function (error, results, fields) {
     if (error) throw error;
     if(results.length)
     {
