@@ -101,12 +101,12 @@ app.post('/customer_login',(req,res) =>{
   //Authenticate user
   const username = req.body.Email;
   const password = req.body.Password;
-  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id FROM `tbl_registration` WHERE username="'+username+'" and password="'+password+'" and role_id=3', function (error, results, fields) {
+  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id,isactive FROM `tbl_registration` WHERE username="'+username+'" and password="'+password+'" and role_id=3', function (error, results, fields) {
     if (error) throw error;
     if(results.length)
     {
-      const isactive = { isactive : results[0].isactive}
-      if(isactive=='1')
+      const isactive = results[0].isactive;
+      if(isactive == 1)
       {
         const user = { userguid : results[0].userguid}
         const accessToken = generateAccessToken(user)
