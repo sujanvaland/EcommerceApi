@@ -113,9 +113,16 @@ var connection = require('../config/db');
       if (error) throw error;
       if(results.length > 0)
       {
-        connection.query('DELETE FROM tbl_manage_address WHERE userguid="'+req.headers.customerguid+'" and id = "'+params.id+'"', function (error, results, fields) {
+        connection.query('DELETE FROM tbl_manage_address WHERE userguid="'+req.headers.customerguid+'" and id = "'+params.id+'" and isdefault != 1', function (error, results, fields) {
           if (error) throw error;
-          res.json({ Message:"success",results});
+          if(results.length > 0)
+          {
+              res.json({ Message:"success",results});
+          }
+          else
+          {
+            res.json({ Message:"Can not delete default address.",results});
+          }
         });
       }
       else
