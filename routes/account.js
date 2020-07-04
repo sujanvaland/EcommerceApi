@@ -11,6 +11,14 @@ var connection = require('../config/db');
     });
   });
 
+  //rest api to get a customer Profile Image data
+  app.get('/profileimage', function (req, res) {
+    connection.query('select id,customerimage from tbl_registration where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
+      if (error) throw error;
+      res.json({ Message:"success",results});
+    });
+  });
+
   //rest api to get a customer address data
   app.get('/Getcustomeraddress', function (req, res) {
     connection.query('select id,bfirstname,blastname,bphone,door_no_build_no_street,locality,landmark,bcity,bzipcode,isdefault from tbl_manage_address where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
