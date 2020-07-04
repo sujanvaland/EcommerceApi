@@ -1,6 +1,34 @@
 const express = require('express');
 const app = express();
 var connection = require('../config/db');
+var multer  = require('multer')
+const path = require('path');
+const fs = require('fs')
+var sizeOf = require('image-size');
+
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+      cb(null, 'public/uploads/customerimage/');
+  },
+
+  // By default, multer removes file extensions so let's add them back
+  filename: function(req, file, cb) {
+    if (!file.originalname.match(/\.(jpg|png|jpeg|JPG|PNG|JPEG)$/)) {
+      var err = new Error();
+      err.code = 'filetype';
+      return cb(err);
+    } 
+    else 
+    {
+      cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+    } 
+  }
+});
+
+var upload = multer({ storage: storage,limits: {
+  fileSize: 1000000
+} }).single('customerimage');
+//var upload = multer({ dest: 'public/uploads/customerimage/' })
 
   
   //rest api to get a login customer data
@@ -138,6 +166,54 @@ var connection = require('../config/db');
         res.json({ Message:"error",results});
       }
       
+    });
+  });
+
+  //rest api to update Profile Image record into mysql database
+  app.post('/updateprofileimage', (req, res) => {
+
+    upload(req, res, function (err) {
+      if (err) 
+      {
+        if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.send({ Message: 'limit file size 1MB'})
+        } else if (err.code === 'filetype') {
+            return res.send({ Message: 'Must be valid file extension only jpg or png'})
+        } else {
+            return res.send({ Message: 'something went wrong'})
+        }
+
+      } 
+      else 
+      {
+        if (!req.file) {
+            return res.send({ Message: 'No file selected'})
+        } 
+
+        const imagepath = 'public/uploads/customerimage/'+req.file.filename;
+        // here in the req.file you will have the uploaded avatar file
+        var params  = req.body;
+              
+        connection.query('select customerimage from tbl_registration where userguid="'+params.userguid+'"', function (error, results, fields) {
+          if (error) throw error;
+          if(results.length)
+          {
+            var newstring=JSON.stringify(results);
+            var newjson =  JSON.parse(newstring);
+            oldcustomerimage = newjson[0].customerimage;
+            if(oldcustomerimage!='')
+            {
+              const unlinkimagepath = 'public/uploads/customerimage/'+oldcustomerimage;
+              fs.unlink(unlinkimagepath, (err) => {});
+            }
+            params.customerimage= req.file.filename;
+            connection.query('UPDATE `tbl_registration` SET `customerimage`=? where `userguid`=?', [params.customerimage, params.userguid], function (error, results, fields) {
+              if (error) throw error;
+                res.json({ Message:"success",customerimage:params.customerimage,results});
+              });
+          }
+        });
+      }
     });
   });
   
