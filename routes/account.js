@@ -49,7 +49,7 @@ var upload = multer({ storage: storage,limits: {
 
   //rest api to get a customer address data
   app.get('/Getcustomeraddress', function (req, res) {
-    connection.query('select id,bfirstname,blastname,bphone,door_no_build_no_street,locality,landmark,bcity,bzipcode,isdefault from tbl_manage_address where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
+    connection.query('select id,addresstype,bfirstname,blastname,bphone,door_no_build_no_street,locality,landmark,bcity,bzipcode,isdefault from tbl_manage_address where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
       if (error) throw error;
       res.json({ Message:"success",results});
     });
@@ -98,7 +98,7 @@ var upload = multer({ storage: storage,limits: {
       if(results.length == 0)
       {
         params.userguid=req.headers.customerguid;
-        connection.query('UPDATE `tbl_manage_address` SET `bfirstname`=?,`blastname`=?,`bphone`=?,`door_no_build_no_street`=?,`locality`=?,`landmark`=?,`bcity`=?,`bzipcode`=? where `id`=? and `userguid`=?', [params.bfirstname, params.blastname, params.bphone, params.door_no_build_no_street, params.locality, params.landmark, params.bcity, params.bzipcode, params.id, req.headers.customerguid], function (error, results, fields) {
+        connection.query('UPDATE `tbl_manage_address` SET `addresstype`=?,`bfirstname`=?,`blastname`=?,`bphone`=?,`door_no_build_no_street`=?,`locality`=?,`landmark`=?,`bcity`=?,`bzipcode`=? where `id`=? and `userguid`=?', [params.addresstype, params.bfirstname, params.blastname, params.bphone, params.door_no_build_no_street, params.locality, params.landmark, params.bcity, params.bzipcode, params.id, req.headers.customerguid], function (error, results, fields) {
           if (error) throw error;
             res.json({ Message:"success",results});
           });

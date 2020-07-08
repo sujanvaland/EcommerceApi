@@ -53,7 +53,7 @@ var connection = require('../config/db');
   //rest api to get all cart item by userguid
   app.get('/getcartitems', function (req, res) {
 
-    var sql = "SELECT tbl_cart.id,tbl_cart.pid,tbl_cart.qty, tbl_product.productname AS productname, tbl_product.productimage AS productimage, tbl_product.price as unitprice,(tbl_product.price*tbl_cart.qty) as pprice FROM tbl_cart JOIN tbl_product ON tbl_cart.pid = tbl_product.id where userguid='"+req.headers.customerguid+"' and tbl_product.isactive=1 and tbl_product.instock=1";
+    var sql = "SELECT tbl_cart.id,tbl_cart.pid,tbl_cart.qty, tbl_product.productname AS productname, tbl_product.productimage AS productimage, tbl_product.price as unitprice,(tbl_product.price*tbl_cart.qty) as pprice FROM tbl_cart JOIN tbl_product ON tbl_cart.pid = tbl_product.id where qty > 0 and userguid='"+req.headers.customerguid+"' and tbl_product.isactive=1 and tbl_product.instock=1";
     
     connection.query(sql, function (error, results, fields) {
          if (error) throw error;
