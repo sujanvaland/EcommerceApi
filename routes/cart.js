@@ -80,5 +80,21 @@ var connection = require('../config/db');
     });
   });
 
+  //rest api to get all cart Count by userguid
+  app.get('/getcartcount', function (req, res) {
+
+    var sql = "SELECT sum(qty) as totalcartcount FROM tbl_cart JOIN tbl_product ON tbl_cart.pid = tbl_product.id where qty > 0 and userguid='"+req.headers.customerguid+"' and tbl_product.isactive=1 and tbl_product.instock=1";
+    connection.query(sql, function (error, results, fields) {
+         if (error) throw error;
+
+         var totalcartcount=0;
+         if(results[0].totalcartcount > 0)
+         {
+          totalcartcount=results[0].totalcartcount;
+         }
+         res.json({ Message:"success",totalcartcount:totalcartcount});
+       });
+  });
+
   
   module.exports = app;
