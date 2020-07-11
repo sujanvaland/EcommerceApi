@@ -49,7 +49,7 @@ var upload = multer({ storage: storage,limits: {
 
   //rest api to get a customer address data
   app.get('/Getcustomeraddress', function (req, res) {
-    connection.query('select id,addresstype,bfirstname,blastname,bphone,door_no_build_no_street,locality,landmark,bcity,bzipcode,isdefault from tbl_manage_address where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
+    connection.query('select id,addresstype,bfirstname,blastname,bphone,door_no_build_no_street,locality,landmark,bcity,bzipcode,isdefault from tbl_manage_address where userguid="'+req.headers.customerguid+'" order by id asc', function (error, results, fields) {
       if (error) throw error;
       res.json({ Message:"success",results});
     });
@@ -113,7 +113,15 @@ var upload = multer({ storage: storage,limits: {
   //rest api to get a customer address by id data
   app.post('/addressdetail', function (req, res) {
     var params  = req.body;
-    connection.query('select id,bfirstname,blastname,bphone,door_no_build_no_street,locality,landmark,bcity,bzipcode,isdefault from tbl_manage_address where userguid="'+req.headers.customerguid+'" and id="'+params.id+'"', function (error, results, fields) {
+    if(params.id > 0)
+    {
+      var sql = 'select id,bfirstname,blastname,bphone,door_no_build_no_street,locality,landmark,bcity,bzipcode,isdefault from tbl_manage_address where userguid="'+req.headers.customerguid+'" and id="'+params.id+'"';
+    }
+    else
+    {
+      var sql = 'select id,bfirstname,blastname,bphone,door_no_build_no_street,locality,landmark,bcity,bzipcode,isdefault from tbl_manage_address where userguid="'+req.headers.customerguid+'" and isdefault=1';
+    }
+    connection.query(sql, function (error, results, fields) {
       if (error) throw error;
       res.json({ Message:"success",results});
     });
@@ -145,25 +153,18 @@ var upload = multer({ storage: storage,limits: {
   //rest api to delete address by id data
   app.post('/deleteaddress', function (req, res) {
     var params  = req.body;
-    connection.query('select id from tbl_manage_address where userguid="'+req.headers.customerguid+'" and id="'+params.id+'"', function (error, results, fields) {
+    connection.query('select id from tbl_manage_address where userguid="'+req.headers.customerguid+'" and id="'+params.id+'" and isdefault != 1', function (error, results, fields) {
       if (error) throw error;
       if(results.length > 0)
       {
         connection.query('DELETE FROM tbl_manage_address WHERE userguid="'+req.headers.customerguid+'" and id = "'+params.id+'" and isdefault != 1', function (error, results, fields) {
           if (error) throw error;
-          if(results.length > 0)
-          {
-              res.json({ Message:"success",results});
-          }
-          else
-          {
-            res.json({ Message:"Can not delete default address.",results});
-          }
+          res.json({ Message:"success",results});
         });
       }
       else
       {
-        res.json({ Message:"error",results});
+        res.json({ Message:"Can not delete default address.",results});
       }
       
     });
