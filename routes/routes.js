@@ -8,6 +8,7 @@ apiRouter.use('/user',authenticateToken, require('./users'));
 apiRouter.use('/customer',authenticateToken, require('./customer'));
 apiRouter.use('/category',authenticateToken, require('./category'));
 apiRouter.use('/product',authenticateToken, require('./product'));
+apiRouter.use('/order',authenticateToken, require('./order'));
 apiRouter.use('/deliverystaff',authenticateToken, require('./deliverystaff'));
 
 apiRouter.use('/appcategory', require('./appcategory'));
