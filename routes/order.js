@@ -4,41 +4,121 @@ var connection = require('../config/db');
 
   //rest api to get all orders
   app.get('/order', function (req, res) {
+    var callbackCounter = 0;
     connection.query('select * from tbl_order', function (error, results, fields) {
-       if (error) throw error;
-       res.send(results);
+        if (error) throw error;
+        let orders = [];
+        results.forEach(element => { 
+          connection.query('select * from tbl_orderitem where orderguid="'+element.orderguid+'"', function (error, itemresults, fields) {
+            if (error) throw error;
+            element.orderitems = [];
+            itemresults.forEach(newelement => {
+              element.orderitems.push(newelement);
+            });
+            orders.push(element);
+            callbackCounter++;
+            if(results.length == callbackCounter)
+            {
+              res.send(orders);
+            }
+          });
+        });
      });
   });
   
   app.get('/GetAllOrders', function (req, res) {
-    connection.query('select id,firstname,lastname,email,phone,orderguid from tbl_order', function (error, results, fields) {
-       if (error) throw error;
-       res.send(results);
+    var callbackCounter = 0;
+    connection.query('select * from tbl_order', function (error, results, fields) {
+        if (error) throw error;
+        let orders = [];
+        results.forEach(element => { 
+          connection.query('select * from tbl_orderitem where orderguid="'+element.orderguid+'"', function (error, itemresults, fields) {
+            if (error) throw error;
+            element.orderitems = [];
+            itemresults.forEach(newelement => {
+              element.orderitems.push(newelement);
+            });
+            orders.push(element);
+            callbackCounter++;
+            if(results.length == callbackCounter)
+            {
+              res.send(orders);
+            }
+          });
+        });
      });
   });
 
   //rest api to get filter order
   app.get('/GetAllOrders/:name', function (req, res) {
-    connection.query('select id,firstname,lastname,email,phone,orderguid from tbl_order where (firstname like "%'+req.params.name+'%" or lastname like "%'+req.params.name+'%")', function (error, results, fields) {
-       if (error) throw error;
-       res.send(results);
-     });
+     var callbackCounter = 0;
+     connection.query('select * from tbl_order where (firstname like "%'+req.params.name+'%" or lastname like "%'+req.params.name+'%")', function (error, results, fields) {
+         if (error) throw error;
+         let orders = [];
+         results.forEach(element => { 
+           connection.query('select * from tbl_orderitem where orderguid="'+element.orderguid+'"', function (error, itemresults, fields) {
+             if (error) throw error;
+             element.orderitems = [];
+             itemresults.forEach(newelement => {
+               element.orderitems.push(newelement);
+             });
+             orders.push(element);
+             callbackCounter++;
+             if(results.length == callbackCounter)
+             {
+               res.send(orders);
+             }
+           });
+         });
+      });
   });
 
   //rest api to get a login order data
   app.post('/GetOrderInfo', function (req, res) {
-    connection.query('select id,firstname,lastname,email,phone,orderguid from tbl_order where orderguid="'+req.body.orderguid+'"', function (error, results, fields) {
-      if (error) throw error;
-      res.send(results);
-    });
+    var callbackCounter = 0;
+    connection.query('select * from tbl_order where orderguid="'+req.body.orderguid+'"', function (error, results, fields) {
+        if (error) throw error;
+        let orders = [];
+        results.forEach(element => { 
+          connection.query('select * from tbl_orderitem where orderguid="'+element.orderguid+'"', function (error, itemresults, fields) {
+            if (error) throw error;
+            element.orderitems = [];
+            itemresults.forEach(newelement => {
+              element.orderitems.push(newelement);
+            });
+            orders.push(element);
+            callbackCounter++;
+            if(results.length == callbackCounter)
+            {
+              res.send(orders);
+            }
+          });
+        });
+     });
   });
 
   //rest api to get a single tbl_order data
   app.get('/order/:id', function (req, res) {
-    connection.query('select * from tbl_order where id=?', [req.params.id], function (error, results, fields) {
-       if (error) throw error;
-       res.send(results);
-     });
+     var callbackCounter = 0;
+     connection.query('select * from tbl_order where id="'+req.params.id+'"', function (error, results, fields) {
+         if (error) throw error;
+         let orders = [];
+         results.forEach(element => { 
+           connection.query('select * from tbl_orderitem where orderguid="'+element.orderguid+'"', function (error, itemresults, fields) {
+             if (error) throw error;
+             element.orderitems = [];
+             itemresults.forEach(newelement => {
+               element.orderitems.push(newelement);
+             });
+             orders.push(element);
+             callbackCounter++;
+             if(results.length == callbackCounter)
+             {
+               res.send(orders);
+             }
+           });
+         });
+      });
   });
   
   //rest api to update record into mysql database

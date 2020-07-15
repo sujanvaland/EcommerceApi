@@ -183,5 +183,29 @@ const { v1: uuidv1 } = require('uuid');
     });
   });
 
+   //rest api to get all orders Customer Wise
+   app.get('/orderbyuserguid', function (req, res) {
+    var callbackCounter = 0;
+    connection.query('select * from tbl_order where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
+        if (error) throw error;
+        let orders = [];
+        results.forEach(element => { 
+          connection.query('select * from tbl_orderitem where orderguid="'+element.orderguid+'"', function (error, itemresults, fields) {
+            if (error) throw error;
+            element.orderitems = [];
+            itemresults.forEach(newelement => {
+              element.orderitems.push(newelement);
+            });
+            orders.push(element);
+            callbackCounter++;
+            if(results.length == callbackCounter)
+            {
+              res.send({Message:"success",orders});
+            }
+          });
+        });
+     });
+  });
+
   
   module.exports = app;
