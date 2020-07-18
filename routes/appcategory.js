@@ -23,5 +23,13 @@ app.post('/categorydetail', function (req, res) {
       res.json({ Message:"success",results});
     });
 });
+
+//rest api to get all location
+app.get('/location', function (req, res) {
+  connection.query('select * from tbl_city_master where isactive=1 order by city asc', function (error, results, fields) {
+      if (error) throw error;
+      res.json({ Message:"success",results});
+    });
+});
   
   module.exports = app;

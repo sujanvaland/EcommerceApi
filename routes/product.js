@@ -55,9 +55,10 @@ var upload = multer({ storage: storage,limits: {
           //console.log(dimensions.width, dimensions.height);
           if(dimensions.width<=605 && dimensions.height<=380)
             {
+                var callbackCounter = 0;
                 // here in the req.file you will have the uploaded avatar file
                 var params  = JSON.parse(req.body.data);
-                
+
                 connection.query('select productname from tbl_product where productname="'+params.productname+'"', function (error, results, fields) {
                   if(results.length == 0)
                   {
@@ -95,21 +96,51 @@ var upload = multer({ storage: storage,limits: {
                         params.isactive = 0;
                       }
 
-                      if (params.instock == true)
-                      {
-                        params.instock = 1;
-                      }
-                      else
-                      {
-                        params.instock = 0;
-                      }
+                      // if (params.instock == true)
+                      // {
+                      //   params.instock = 1;
+                      // }
+                      // else
+                      // {
+                      //   params.instock = 0;
+                      // }
                       
-                      connection.query('INSERT INTO `tbl_product` SET ?', params, function (error, Insertresults, fields) {
+                      connection.query('INSERT INTO `tbl_product` SET `category`=?,`productname`=?,`shortdesc`=?,`detaildesc`=?,`pieces`=?,`net_weight`=?,`price`=?,`isnewarrival`=?,`isactive`=?,`slug`=?,`created_date`=?,`productimage`=?,`sortorder`=?', 
+                       [params.category, params.productname, params.shortdesc, 
+                        params.detaildesc, params.pieces, params.net_weight, 
+                        params.price, params.isnewarrival, params.isactive,
+                        params.slug, params.created_date, params.productimage,
+                        params.sortorder], function (error, Insertresults, fields) {
                         if (error) throw error;
                         if(Insertresults.insertId > 0)
                           {
-                            //var productid=Insertresults.insertId;
-                            res.json({ Message:"success",Insertresults});
+                            if(params.stockin.length > 0) 
+                            {
+                              params.stockin.forEach(newelement => {
+                                if(params.stockin.length==1 && newelement=='')
+                                {
+                                  res.send({Message:"success"});
+                                }
+                                else
+                                {
+                                  callbackCounter++;
+                                  if(newelement!='')
+                                  {
+                                    connection.query('INSERT INTO `tbl_location_stock` SET `pid`=?,`location`=?,`instock`=?', [Insertresults.insertId, newelement, '1'], function (error, Insertresults, fields) {
+                                      if (error) throw error;
+                                      if(params.stockin.length == callbackCounter)
+                                      {
+                                        res.send({Message:"success"});
+                                      }
+                                    });
+                                  }
+                                }
+                              });
+                            }
+                            else
+                            {
+                              res.send({Message:"success"});
+                            }
                           }
                       });
                     });
@@ -151,9 +182,26 @@ var upload = multer({ storage: storage,limits: {
 
   //rest api to get a single tbl_product data
   app.get('/productdetail/:id', function (req, res) {
+
+    var callbackCounter = 0;
     connection.query('select * from tbl_product where id=?', [req.params.id], function (error, results, fields) {
        if (error) throw error;
-       res.send(results);
+       let products = [];
+       results.forEach(element => { 
+        connection.query('select * from tbl_location_stock where pid="'+element.id+'"', function (error, instockresult, fields) {
+          if (error) throw error;
+          element.stockinlocation = [];
+          instockresult.forEach(newelement => {
+            element.stockinlocation.push(newelement.location);
+          });
+          products.push(element);
+          callbackCounter++;
+          if(results.length == callbackCounter)
+          {
+            res.send(products);
+          }
+        });
+      });
      });
   });
   
@@ -183,6 +231,7 @@ var upload = multer({ storage: storage,limits: {
           //console.log(dimensions.width, dimensions.height);
           if(dimensions.width<=605 && dimensions.height<=380)
             {
+              var callbackCounter = 0;
               // here in the req.file you will have the uploaded avatar file
               var params  = JSON.parse(req.body.data);
               connection.query('select productname from tbl_product where productname="'+params.productname+'" and id !="'+params.id+'"', function (error, results, fields) {
@@ -208,14 +257,16 @@ var upload = multer({ storage: storage,limits: {
                       params.isactive = 0;
                     }
 
-                    if (params.instock == true)
-                    {
-                      params.instock = 1;
-                    }
-                    else
-                    {
-                      params.instock = 0;
-                    }
+                    // if (params.instock == true)
+                    // {
+                    //   params.instock = 1;
+                    // }
+                    // else
+                    // {
+                    //   params.instock = 0;
+                    // }
+
+                    params.instock = 1;
 
                     connection.query('select productimage,sortorder from tbl_product where id='+params.id, function (error, results, fields) {
                       if (error) throw error;
@@ -241,8 +292,37 @@ var upload = multer({ storage: storage,limits: {
 
                         connection.query('UPDATE `tbl_product` SET `productname`=?,`slug`=?,`category`=?,`shortdesc`=?,`detaildesc`=?,`pieces`=?,`net_weight`=?,`price`=?,`sortorder`=?,`isnewarrival`=?,`instock`=?,`isactive`=?,`productimage`=? where `id`=?', [params.productname, params.slug, params.category, params.shortdesc, params.detaildesc, params.pieces, params.net_weight, params.price, params.sortorder, params.isnewarrival, params.instock, params.isactive, params.productimage, params.id], function (error, results, fields) {
                           if (error) throw error;
-                            res.json({ Message:"success",results});
-                          });
+                          if(params.stockin.length > 0) 
+                            {
+                              connection.query('DELETE FROM `tbl_location_stock` WHERE pid='+params.id, function (error, results, fields) {
+                                if (error) throw error;
+                                params.stockin.forEach(newelement => {
+                                  if(params.stockin.length==1 && newelement=='')
+                                  {
+                                    res.send({Message:"success"});
+                                  }
+                                  else
+                                  {
+                                    callbackCounter++;
+                                    if(newelement!='')
+                                    {
+                                      connection.query('INSERT INTO `tbl_location_stock` SET `pid`=?,`location`=?,`instock`=?', [params.id, newelement, '1'], function (error, Insertresults, fields) {
+                                        if (error) throw error;
+                                        if(params.stockin.length == callbackCounter)
+                                        {
+                                          res.send({Message:"success"});
+                                        }
+                                      });
+                                    }
+                                  }
+                                });
+                               });
+                            }
+                          else
+                            {
+                              res.send({Message:"success"});
+                            }
+                        });
                       }
                     });
                 }
@@ -268,6 +348,7 @@ var upload = multer({ storage: storage,limits: {
   //rest api to update record into mysql database
   app.post('/updatedata', function (req, res) {
     // here in the req.file you will have the uploaded avatar file
+    var callbackCounter = 0;
     var params  = req.body;
     connection.query('select productname from tbl_product where productname="'+params.productname+'" and id !="'+params.id+'"', function (error, results, fields) {
       if(results.length == 0)
@@ -321,8 +402,37 @@ var upload = multer({ storage: storage,limits: {
 
               connection.query('UPDATE `tbl_product` SET `productname`=?,`slug`=?,`category`=?,`shortdesc`=?,`detaildesc`=?,`pieces`=?,`net_weight`=?,`price`=?,`sortorder`=?,`isnewarrival`=?,`instock`=?,`isactive`=? where `id`=?', [params.productname, params.slug, params.category, params.shortdesc, params.detaildesc, params.pieces, params.net_weight, params.price, params.sortorder, params.isnewarrival, params.instock, params.isactive, params.id], function (error, results, fields) {
                 if (error) throw error;
-                  res.json({ Message:"success",results});
-                });
+                if(params.stockin.length > 0) 
+                  {
+                    connection.query('DELETE FROM `tbl_location_stock` WHERE pid='+params.id, function (error, results, fields) {
+                      if (error) throw error;
+                      params.stockin.forEach(newelement => {
+                        if(params.stockin.length==1 && newelement=='')
+                        {
+                          res.send({Message:"success"});
+                        }
+                        else
+                        {
+                          callbackCounter++;
+                          if(newelement!='')
+                          {
+                            connection.query('INSERT INTO `tbl_location_stock` SET `pid`=?,`location`=?,`instock`=?', [params.id, newelement, '1'], function (error, Insertresults, fields) {
+                              if (error) throw error;
+                              if(params.stockin.length == callbackCounter)
+                              {
+                                res.send({Message:"success"});
+                              }
+                            });
+                          }
+                        }
+                      });
+                    });
+                  }
+                else
+                  {
+                    res.send({Message:"success"});
+                  }
+              });
             }
           });
       }
@@ -349,16 +459,23 @@ var upload = multer({ storage: storage,limits: {
         fs.unlink(unlinkimagepath, (err) => {});
       }
 
-      connection.query('DELETE FROM `tbl_product` WHERE id='+req.body.id, function (error, results, fields) {
+      connection.query('DELETE FROM `tbl_location_stock` WHERE pid='+req.body.id, function (error, results, fields) {
         if (error) throw error;
-        
-  
-          res.json({ Message:"success"});
-          //res.send('Product has been deleted!');
-       });
-       
+        connection.query('DELETE FROM `tbl_product` WHERE id='+req.body.id, function (error, results, fields) {
+          if (error) throw error;
+            res.json({ Message:"success"});
+        });
+      });
     });
     
+  });
+
+  //rest api to get all location
+  app.get('/all_active_location', function (req, res) {
+    connection.query('select * from tbl_city_master where isactive=1 order by city asc', function (error, results, fields) {
+       if (error) throw error;
+       res.send(results);
+     });
   });
   
   module.exports = app;
