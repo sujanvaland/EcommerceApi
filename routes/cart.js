@@ -54,17 +54,12 @@ const { v1: uuidv1 } = require('uuid');
   //rest api to get all cart item by userguid
   app.get('/getcartitems', function (req, res) {
 
-    var sql = "SELECT tbl_cart.id,tbl_cart.pid,tbl_cart.qty, tbl_product.productname AS productname, tbl_product.productimage AS productimage, tbl_product.price as unitprice,(tbl_product.price*tbl_cart.qty) as pprice FROM tbl_cart JOIN tbl_product ON tbl_cart.pid = tbl_product.id where qty > 0 and userguid='"+req.headers.customerguid+"' and tbl_product.isactive=1 and tbl_product.instock=1";
+    var sql = "SELECT tbl_cart.id,tbl_cart.pid,tbl_cart.qty, tbl_product.productname AS productname, tbl_product.productimage AS productimage, tbl_product.price as unitprice,(tbl_product.price*tbl_cart.qty) as pprice FROM tbl_cart JOIN tbl_product ON tbl_cart.pid = tbl_product.id where qty > 0 and userguid='"+req.headers.customerguid+"' and tbl_product.isactive=1 and tbl_product.id IN (select pid from tbl_location_stock where instock=1 and pid=tbl_product.id and location='"+req.headers.location+"')";
     
     connection.query(sql, function (error, results, fields) {
          if (error) throw error;
          res.json({ Message:"success",results});
        });
-
-    // connection.query('select id,pid,qty,(select productname from tbl_product where id=tbl_cart.pid) as productname,(select price from tbl_product where id=tbl_cart.pid) as unitprice,((select price from tbl_product where id=tbl_cart.pid)*qty) as pprice,(select isactive from tbl_product where id=tbl_cart.pid) as isactive,(select instock from tbl_product where id=tbl_cart.pid) as instock from tbl_cart where userguid="'+req.headers.customerguid+'" and tbl_product.isactive=1', function (error, results, fields) {
-    //    if (error) throw error;
-    //    res.json({ Message:"success",results});
-    //  });
   });
 
   //rest api to get all cart item by userguid
@@ -84,7 +79,7 @@ const { v1: uuidv1 } = require('uuid');
   //rest api to get all cart Count by userguid
   app.get('/getcartcount', function (req, res) {
 
-    var sql = "SELECT sum(qty) as totalcartcount FROM tbl_cart JOIN tbl_product ON tbl_cart.pid = tbl_product.id where qty > 0 and userguid='"+req.headers.customerguid+"' and tbl_product.isactive=1 and tbl_product.instock=1";
+    var sql = "SELECT sum(qty) as totalcartcount FROM tbl_cart JOIN tbl_product ON tbl_cart.pid = tbl_product.id where qty > 0 and userguid='"+req.headers.customerguid+"' and tbl_product.isactive=1 and tbl_product.id IN (select pid from tbl_location_stock where instock=1 and pid=tbl_product.id and location='"+req.headers.location+"')";
     connection.query(sql, function (error, results, fields) {
          if (error) throw error;
 
@@ -100,7 +95,7 @@ const { v1: uuidv1 } = require('uuid');
   //rest api to add cart data
   app.post('/placeorder', function (req, res) {
     var params  = req.body;
-    var sql = "SELECT tbl_cart.id,sum(tbl_product.price*tbl_cart.qty) as subtotal FROM tbl_cart JOIN tbl_product ON tbl_cart.pid = tbl_product.id where qty > 0 and userguid='"+req.headers.customerguid+"' and tbl_product.isactive=1 and tbl_product.instock=1";
+    var sql = "SELECT tbl_cart.id,sum(tbl_product.price*tbl_cart.qty) as subtotal FROM tbl_cart JOIN tbl_product ON tbl_cart.pid = tbl_product.id where qty > 0 and userguid='"+req.headers.customerguid+"' and tbl_product.isactive=1 and tbl_product.id IN (select pid from tbl_location_stock where instock=1 and pid=tbl_product.id and location='"+req.headers.location+"')";
     connection.query(sql, function (error, results, fields) {
       if (error) throw error;
       if(results.length == 0)

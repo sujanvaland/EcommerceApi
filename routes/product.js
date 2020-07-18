@@ -373,14 +373,16 @@ var upload = multer({ storage: storage,limits: {
             params.isactive = 0;
           }
 
-          if (params.instock == true)
-          {
-            params.instock = 1;
-          }
-          else
-          {
-            params.instock = 0;
-          }
+          // if (params.instock == true)
+          // {
+          //   params.instock = 1;
+          // }
+          // else
+          // {
+          //   params.instock = 0;
+          // }
+
+          params.instock = 1;
 
           connection.query('select sortorder from tbl_product where id='+params.id, function (error, results, fields) {
             if (error) throw error;
