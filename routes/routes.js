@@ -10,6 +10,7 @@ apiRouter.use('/category',authenticateToken, require('./category'));
 apiRouter.use('/product',authenticateToken, require('./product'));
 apiRouter.use('/order',authenticateToken, require('./order'));
 apiRouter.use('/deliverystaff',authenticateToken, require('./deliverystaff'));
+apiRouter.use('/cms',authenticateToken, require('./cms'));
 
 apiRouter.use('/appcategory', require('./appcategory'));
 apiRouter.use('/appproduct', require('./appproduct'));
