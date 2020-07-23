@@ -153,5 +153,32 @@ const { v1: uuidv1 } = require('uuid');
       }
     });
   });
+
+
+  // Start API for Mobile APP
+    //rest api to get all orders Delivery Staff Wise
+    app.get('/orderbystaff', function (req, res) {
+      var callbackCounter = 0;
+      connection.query('select * from tbl_order where staff_id="'+req.headers.customerguid+'"', function (error, results, fields) {
+          if (error) throw error;
+          let orders = [];
+          results.forEach(element => { 
+            connection.query('select * from tbl_orderitem where orderguid="'+element.orderguid+'"', function (error, itemresults, fields) {
+              if (error) throw error;
+              element.orderitems = [];
+              itemresults.forEach(newelement => {
+                element.orderitems.push(newelement);
+              });
+              orders.push(element);
+              callbackCounter++;
+              if(results.length == callbackCounter)
+              {
+                res.send({Message:"success",orders});
+              }
+            });
+          });
+      });
+    });
+  // Ends API for Mobile APP
   
   module.exports = app;

@@ -92,7 +92,7 @@ const { v1: uuidv1 } = require('uuid');
        });
   });
 
-  //rest api to add cart data
+  //rest api to Place Order data
   app.post('/placeorder', function (req, res) {
     var params  = req.body;
     var sql = "SELECT tbl_cart.id,sum(tbl_product.price*tbl_cart.qty) as subtotal FROM tbl_cart JOIN tbl_product ON tbl_cart.pid = tbl_product.id where qty > 0 and userguid='"+req.headers.customerguid+"' and tbl_product.isactive=1 and tbl_product.id IN (select pid from tbl_location_stock where instock=1 and pid=tbl_product.id and location='"+req.headers.location+"')";
@@ -178,8 +178,8 @@ const { v1: uuidv1 } = require('uuid');
     });
   });
 
-   //rest api to get all orders Customer Wise
-   app.get('/orderbyuserguid', function (req, res) {
+  //rest api to get all orders Customer Wise
+  app.get('/orderbyuserguid', function (req, res) {
     var callbackCounter = 0;
     connection.query('select * from tbl_order where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
         if (error) throw error;
@@ -199,6 +199,70 @@ const { v1: uuidv1 } = require('uuid');
             }
           });
         });
+     });
+  });
+
+
+  //rest api to Re-Order.
+  app.post('/reorder', function (req, res) {
+    var callbackCounter = 0;
+    var productresultsCounter = 0;
+    connection.query('select pid,qty from tbl_orderitem where orderguid="'+req.body.orderguid+'"', function (error, results, fields) {
+        if (error) throw error;
+        if(results.length > 0)
+        {
+          results.forEach(element => { 
+            connection.query('select * from tbl_product where id="'+element.pid+'" and id IN (select pid from tbl_location_stock where instock=1 and pid="'+element.pid+'" and location="'+req.headers.location+'")', function (error, productresults, fields) {
+              if (error) throw error;
+              if(productresults.length > 0)
+              {
+                productresultsCounter++;
+                connection.query('select id,qty from tbl_cart where pid="'+productresults[0].id+'" and userguid="'+req.headers.customerguid+'"', function (error, cartitemresults, fields) {
+                  if(cartitemresults.length == 0)
+                  {
+                    connection.query('INSERT INTO `tbl_cart` SET `pid`=?,`userguid`=?,`qty`=?', [productresults[0].id, req.headers.customerguid, element.qty], function (error, Insertresults, fields) {
+                      if (error) throw error;
+                    });
+                  }
+                  else
+                  {
+                    old_qty=cartitemresults[0].qty;
+                    new_qty=(old_qty - 0) + (element.qty - 0);
+            
+                    if(new_qty > 0)
+                    {
+                      connection.query('update tbl_cart set qty='+new_qty+' where id = "'+cartitemresults[0].id+'"', function (error, cartupdateresults, fields) {
+                        if (error) throw error;
+                      });
+                    }
+                    else
+                    {
+                      connection.query('DELETE FROM tbl_cart WHERE id = "'+cartitemresults[0].id+'"', function (error, deletecartresults, fields) {
+                        if (error) throw error;
+                      });
+                    }
+                  }
+                });
+              }
+              callbackCounter++;
+              if(results.length == callbackCounter)
+              {
+                if(productresultsCounter > 0)
+                {
+                   res.send({Message:"success"});
+                }
+                else
+                {
+                  res.send({Message:"Some of reason you can't reorder this items."});
+                }
+              }
+            });
+          });
+        }
+        else
+        {
+          res.send({Message:"No Items in this Order."});
+        }
      });
   });
 
