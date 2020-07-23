@@ -11,9 +11,11 @@ apiRouter.use('/product',authenticateToken, require('./product'));
 apiRouter.use('/order',authenticateToken, require('./order'));
 apiRouter.use('/deliverystaff',authenticateToken, require('./deliverystaff'));
 apiRouter.use('/cms',authenticateToken, require('./cms'));
+apiRouter.use('/faq',authenticateToken, require('./faq'));
 
 apiRouter.use('/appcategory', require('./appcategory'));
 apiRouter.use('/appproduct', require('./appproduct'));
+apiRouter.use('/appcms', require('./appcms'));
 apiRouter.use('/account',authenticateToken, require('./account'));
 apiRouter.use('/cart',authenticateToken, require('./cart'));
 
