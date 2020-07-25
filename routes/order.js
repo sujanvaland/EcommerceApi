@@ -168,7 +168,11 @@ var connection = require('../config/db');
                   if (error) throw error;
                   connection.query('UPDATE `tbl_order` SET `orderstatus`=?,`staff_id`=? where `orderguid`=?', [req.body.orderstatus,null, req.body.orderguid], function (error, results, fields) {
                     if (error) throw error;
-                    res.send({Message:"success"});
+                    var changedate= new Date();
+                    connection.query('INSERT INTO `tbl_orderstatus_log` SET `orderstatus`=?,`orderguid`=?,`userguid`=?,`changedate`=?', [req.body.orderstatus, req.body.orderguid, req.headers.customerguid, changedate], function (error, Insertresults, fields) {
+                      if (error) throw error;
+                      res.send({Message:"success"});
+                    });
                   });
                 });
               }
@@ -176,7 +180,11 @@ var connection = require('../config/db');
               {
                 connection.query('UPDATE `tbl_order` SET `orderstatus`=? where `orderguid`=?', [req.body.orderstatus, req.body.orderguid], function (error, results, fields) {
                   if (error) throw error;
-                  res.send({Message:"success"});
+                  var changedate= new Date();
+                  connection.query('INSERT INTO `tbl_orderstatus_log` SET `orderstatus`=?,`orderguid`=?,`userguid`=?,`changedate`=?', [req.body.orderstatus, req.body.orderguid, req.headers.customerguid, changedate], function (error, Insertresults, fields) {
+                    if (error) throw error;
+                    res.send({Message:"success"});
+                  });
                 });
               }
             });
@@ -185,7 +193,11 @@ var connection = require('../config/db');
           {
             connection.query('UPDATE `tbl_order` SET `orderstatus`=? where `orderguid`=?', [req.body.orderstatus, req.body.orderguid], function (error, results, fields) {
               if (error) throw error;
-              res.send({Message:"success"});
+              var changedate= new Date();
+              connection.query('INSERT INTO `tbl_orderstatus_log` SET `orderstatus`=?,`orderguid`=?,`userguid`=?,`changedate`=?', [req.body.orderstatus, req.body.orderguid, req.headers.customerguid, changedate], function (error, Insertresults, fields) {
+                if (error) throw error;
+                res.send({Message:"success"});
+              });
             });
           }
         });
@@ -194,7 +206,11 @@ var connection = require('../config/db');
       {
         connection.query('UPDATE `tbl_order` SET `orderstatus`=? where `orderguid`=?', [req.body.orderstatus, req.body.orderguid], function (error, results, fields) {
           if (error) throw error;
-          res.send({Message:"success"});
+          var changedate= new Date();
+          connection.query('INSERT INTO `tbl_orderstatus_log` SET `orderstatus`=?,`orderguid`=?,`userguid`=?,`changedate`=?', [req.body.orderstatus, req.body.orderguid, req.headers.customerguid, changedate], function (error, Insertresults, fields) {
+            if (error) throw error;
+            res.send({Message:"success"});
+          });
         });
       }
   });

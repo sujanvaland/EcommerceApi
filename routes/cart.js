@@ -148,14 +148,28 @@ const { v1: uuidv1 } = require('uuid');
               // For Insert Order Items
               if(Insertresults.insertId > 0)
               {
-                var orderitemsql ="insert into tbl_orderitem(pid,productname,pieces,net_weight,productimage,orderguid,qty,pprice,unitprice,mainprice) select pid,(select productname from tbl_product where id=tbl_cart.pid) as productname,(select pieces from tbl_product where id=tbl_cart.pid) as pieces,(select net_weight from tbl_product where id=tbl_cart.pid) as net_weight,(select productimage from tbl_product where id=tbl_cart.pid) as productimage,'"+orderguid+"',qty,((select price from tbl_product where id=tbl_cart.pid)*qty) as pprice,(select price from tbl_product where id=tbl_cart.pid) as unitprice,(select price from tbl_product where id=tbl_cart.pid) as mainprice from tbl_cart where userguid='"+req.headers.customerguid+"'";
-                connection.query(orderitemsql, function (error, InsertItemresults, fields) {
-                    if (error) throw error;
-                    // For Delete Cart
-                    connection.query('DELETE FROM tbl_cart WHERE userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
-                      if (error) throw error;
-                      res.json({ Message:"success",orderguid:orderguid});
+                connection.query('select orderguid from tbl_order where id="'+Insertresults.insertId+'"', function (error, orderresults, fields) {
+                  if (error) throw error;
+                  if(orderresults.length)
+                  {
+                    var orderitemsql ="insert into tbl_orderitem(pid,productname,pieces,net_weight,productimage,orderguid,qty,pprice,unitprice,mainprice) select pid,(select productname from tbl_product where id=tbl_cart.pid) as productname,(select pieces from tbl_product where id=tbl_cart.pid) as pieces,(select net_weight from tbl_product where id=tbl_cart.pid) as net_weight,(select productimage from tbl_product where id=tbl_cart.pid) as productimage,'"+orderguid+"',qty,((select price from tbl_product where id=tbl_cart.pid)*qty) as pprice,(select price from tbl_product where id=tbl_cart.pid) as unitprice,(select price from tbl_product where id=tbl_cart.pid) as mainprice from tbl_cart where userguid='"+req.headers.customerguid+"'";
+                    connection.query(orderitemsql, function (error, InsertItemresults, fields) {
+                        if (error) throw error;
+                        var changedate= new Date();
+                        connection.query('INSERT INTO `tbl_orderstatus_log` SET `orderstatus`=?,`orderguid`=?,`userguid`=?,`changedate`=?', [0, orderresults[0].orderguid, req.headers.customerguid, changedate], function (error, Insertresults, fields) {
+                          if (error) throw error;
+                          // For Delete Cart
+                          connection.query('DELETE FROM tbl_cart WHERE userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
+                            if (error) throw error;
+                            res.json({ Message:"success",orderguid:orderguid});
+                          });
+                        });
                     });
+                  }
+                  else
+                  {
+                    res.json({ Message:"error",error_message:"Something went wrong. Please try again."});
+                  }
                 });
               }
               else
@@ -183,22 +197,29 @@ const { v1: uuidv1 } = require('uuid');
     var callbackCounter = 0;
     connection.query('select * from tbl_order where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
         if (error) throw error;
-        let orders = [];
-        results.forEach(element => { 
-          connection.query('select * from tbl_orderitem where orderguid="'+element.orderguid+'"', function (error, itemresults, fields) {
-            if (error) throw error;
-            element.orderitems = [];
-            itemresults.forEach(newelement => {
-              element.orderitems.push(newelement);
+        if(results.length)
+          {
+            let orders = [];
+            results.forEach(element => { 
+              connection.query('select * from tbl_orderitem where orderguid="'+element.orderguid+'"', function (error, itemresults, fields) {
+                if (error) throw error;
+                element.orderitems = [];
+                itemresults.forEach(newelement => {
+                  element.orderitems.push(newelement);
+                });
+                orders.push(element);
+                callbackCounter++;
+                if(results.length == callbackCounter)
+                {
+                  res.send({Message:"success",orders});
+                }
+              });
             });
-            orders.push(element);
-            callbackCounter++;
-            if(results.length == callbackCounter)
-            {
-              res.send({Message:"success",orders});
-            }
-          });
-        });
+          }
+          else
+          {
+            res.send({Message:"No Orders in List"});
+          }
      });
   });
 

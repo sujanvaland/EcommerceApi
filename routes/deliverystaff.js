@@ -161,24 +161,45 @@ const { v1: uuidv1 } = require('uuid');
       var callbackCounter = 0;
       connection.query('select * from tbl_order where staff_id="'+req.headers.customerguid+'"', function (error, results, fields) {
           if (error) throw error;
-          let orders = [];
-          results.forEach(element => { 
-            connection.query('select * from tbl_orderitem where orderguid="'+element.orderguid+'"', function (error, itemresults, fields) {
-              if (error) throw error;
-              element.orderitems = [];
-              itemresults.forEach(newelement => {
-                element.orderitems.push(newelement);
+          if(results.length)
+          {
+            let orders = [];
+            results.forEach(element => { 
+              connection.query('select * from tbl_orderitem where orderguid="'+element.orderguid+'"', function (error, itemresults, fields) {
+                if (error) throw error;
+                element.orderitems = [];
+                itemresults.forEach(newelement => {
+                  element.orderitems.push(newelement);
+                });
+                orders.push(element);
+                callbackCounter++;
+                if(results.length == callbackCounter)
+                {
+                  res.send({Message:"success",orders});
+                }
               });
-              orders.push(element);
-              callbackCounter++;
-              if(results.length == callbackCounter)
-              {
-                res.send({Message:"success",orders});
-              }
             });
-          });
+          }
+          else
+          {
+            res.send({Message:"No Orders in List"});
+          }
+          
       });
     });
+
+    //rest api to update order status into mysql database
+    app.post('/ChangeStatus', function (req, res) {
+      connection.query('UPDATE `tbl_order` SET `orderstatus`=? where `orderguid`=?', [req.body.orderstatus, req.body.orderguid], function (error, results, fields) {
+        if (error) throw error;
+        var changedate= new Date();
+        connection.query('INSERT INTO `tbl_orderstatus_log` SET `orderstatus`=?,`orderguid`=?,`userguid`=?,`changedate`=?', [req.body.orderstatus, req.body.orderguid, req.headers.customerguid, changedate], function (error, Insertresults, fields) {
+          if (error) throw error;
+          res.send({Message:"success"});
+        });
+      });
+    });
+
   // Ends API for Mobile APP
   
   module.exports = app;
