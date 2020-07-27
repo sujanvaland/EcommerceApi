@@ -16,6 +16,7 @@ apiRouter.use('/faq',authenticateToken, require('./faq'));
 apiRouter.use('/appcategory', require('./appcategory'));
 apiRouter.use('/appproduct', require('./appproduct'));
 apiRouter.use('/appcms', require('./appcms'));
+apiRouter.use('/appfaq', require('./appfaq'));
 apiRouter.use('/account',authenticateToken, require('./account'));
 apiRouter.use('/cart',authenticateToken, require('./cart'));
 
