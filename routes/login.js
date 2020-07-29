@@ -77,7 +77,7 @@ app.post('/deliverystaff_login',(req,res) =>{
   //Authenticate user
   const username = req.body.Email;
   const password = req.body.Password;
-  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id,isactive,customerimage FROM `tbl_registration` WHERE username="'+username+'" and password="'+password+'" and role_id=2', function (error, results, fields) {
+  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id,isactive,customerimage,birthdate,gender FROM `tbl_registration` WHERE username="'+username+'" and password="'+password+'" and role_id=2', function (error, results, fields) {
     if (error) throw error;
     if(results.length)
     {
@@ -101,7 +101,7 @@ app.post('/customer_login',(req,res) =>{
   //Authenticate user
   const username = req.body.Email;
   const password = req.body.Password;
-  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id,isactive,customerimage,(select sum(qty) from tbl_cart where userguid=tbl_registration.userguid) as countcartitems FROM `tbl_registration` WHERE username="'+username+'" and password="'+password+'" and role_id=3', function (error, results, fields) {
+  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id,isactive,customerimage,birthdate,gender,(select sum(qty) from tbl_cart where userguid=tbl_registration.userguid) as countcartitems FROM `tbl_registration` WHERE username="'+username+'" and password="'+password+'" and role_id=3', function (error, results, fields) {
     if (error) throw error;
     if(results.length)
     {

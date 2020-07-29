@@ -30,7 +30,14 @@ var upload = multer({ storage: storage,limits: {
 } }).single('customerimage');
 //var upload = multer({ dest: 'public/uploads/customerimage/' })
 
-  
+  //rest api to get a customer Account Detail data
+  app.get('/accountdetail', function (req, res) {
+    connection.query('select id,firstname,lastname,birthdate,gender,email,phone,userguid,username,role_id,isactive,customerimage from tbl_registration where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
+      if (error) throw error;
+      res.json({ Message:"success",results});
+    });
+  });
+
   //rest api to get a login customer data
   app.post('/userdetail', function (req, res) {
     connection.query('select id,firstname,lastname,email,phone,userguid,username,role_id,isactive from tbl_registration where username="'+req.body.username+'" and role_id=3', function (error, results, fields) {
@@ -218,7 +225,29 @@ var upload = multer({ storage: storage,limits: {
     });
   });
 
-  //rest api to update a customer address data
+  //rest api to update a personal detail data
+  app.post('/updatepersonaldetail', function (req, res) {
+    var params  = req.body;
+    connection.query('select id from tbl_registration where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
+      if(results.length > 0)
+      {
+        var birthdate=params.birthdate;
+        var strSplitDate = String(birthdate).split('T');
+        var dateArray = strSplitDate[0].split('-');
+        let convertbirthdate =  dateArray[0]+"-"+dateArray[1]+"-"+dateArray[2];
+        connection.query('UPDATE `tbl_registration` SET `firstname`=?,`lastname`=?,`birthdate`=?,`gender`=?,`email`=?,`phone`=? where `userguid`=?', [params.firstname, params.lastname, convertbirthdate, params.gender, params.email, params.phone, req.headers.customerguid], function (error, results, fields) {
+          if (error) throw error;
+            res.json({ Message:"success"});
+          });
+      }
+      else
+      {
+        res.json({ Message:"User Not Found."});
+      }
+    });
+  });
+
+  //rest api to update a Change Password data
   app.post('/ChangePassword', function (req, res) {
     var params  = req.body;
     connection.query('select id from tbl_registration where password="'+params.oldpassword+'" and userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
