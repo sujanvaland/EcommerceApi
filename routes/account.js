@@ -32,7 +32,7 @@ var upload = multer({ storage: storage,limits: {
 
   //rest api to get a customer Account Detail data
   app.get('/accountdetail', function (req, res) {
-    connection.query('select id,firstname,lastname,birthdate,gender,email,phone,userguid,username,role_id,isactive,customerimage from tbl_registration where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
+    connection.query('select id,firstname,lastname,birthdate,gender,email,phone,userguid,username,role_id,isactive,customerimage,vehicalno from tbl_registration where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
       if (error) throw error;
       res.json({ Message:"success",results});
     });
@@ -235,10 +235,23 @@ var upload = multer({ storage: storage,limits: {
         var strSplitDate = String(birthdate).split('T');
         var dateArray = strSplitDate[0].split('-');
         let convertbirthdate =  dateArray[0]+"-"+dateArray[1]+"-"+dateArray[2];
-        connection.query('UPDATE `tbl_registration` SET `firstname`=?,`lastname`=?,`birthdate`=?,`gender`=?,`email`=?,`phone`=? where `userguid`=?', [params.firstname, params.lastname, convertbirthdate, params.gender, params.email, params.phone, req.headers.customerguid], function (error, results, fields) {
-          if (error) throw error;
-            res.json({ Message:"success"});
-          });
+
+        if(params.role_id=='3')
+        {
+          connection.query('UPDATE `tbl_registration` SET `firstname`=?,`lastname`=?,`birthdate`=?,`gender`=?,`email`=?,`phone`=? where `userguid`=?', [params.firstname, params.lastname, convertbirthdate, params.gender, params.email, params.phone, req.headers.customerguid], function (error, results, fields) {
+            if (error) throw error;
+              res.json({ Message:"success"});
+            });
+        }
+
+        if(params.role_id=='2')
+        {
+          connection.query('UPDATE `tbl_registration` SET `firstname`=?,`lastname`=?,`birthdate`=?,`gender`=?,`email`=?,`phone`=?,`vehicalno`=? where `userguid`=?', [params.firstname, params.lastname, convertbirthdate, params.gender, params.email, params.phone, params.vehicalno, req.headers.customerguid], function (error, results, fields) {
+            if (error) throw error;
+              res.json({ Message:"success"});
+            });
+        }
+        
       }
       else
       {
