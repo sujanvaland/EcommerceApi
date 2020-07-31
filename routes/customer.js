@@ -133,5 +133,13 @@ var connection = require('../config/db');
        res.send(results);
      });
   });
+
+   //rest api to get count of customer into mysql database
+   app.get('/GetCustomersCount', function (req, res) {
+    connection.query('select count(id) as customerCount from tbl_registration where role_id=3', function (error, results, fields) {
+        if (error) throw error;
+        res.send(results);
+     });
+  });
   
   module.exports = app;

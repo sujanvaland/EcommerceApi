@@ -479,5 +479,13 @@ var upload = multer({ storage: storage,limits: {
        res.send(results);
      });
   });
+
+  //rest api to get count of product into mysql database
+  app.get('/GetProductsCount', function (req, res) {
+    connection.query('select count(id) as productCount from tbl_product', function (error, results, fields) {
+        if (error) throw error;
+        res.send(results);
+     });
+  });
   
   module.exports = app;

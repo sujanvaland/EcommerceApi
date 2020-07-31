@@ -108,11 +108,7 @@ const { v1: uuidv1 } = require('uuid');
           if (error) throw error;
           if(addressresults.length > 0)
           {
-            var orderstatus = 0;
-            if (req.body.paymenttype ==1)
-            {
-              orderstatus = 1;
-            }
+            var orderstatus = 1;
             var subtotal=results[0].subtotal;
             var deliverycharge=0;
             var ordertotal=(subtotal - 0) + (deliverycharge - 0);
@@ -156,7 +152,7 @@ const { v1: uuidv1 } = require('uuid');
                     connection.query(orderitemsql, function (error, InsertItemresults, fields) {
                         if (error) throw error;
                         var changedate= new Date();
-                        connection.query('INSERT INTO `tbl_orderstatus_log` SET `orderstatus`=?,`orderguid`=?,`userguid`=?,`changedate`=?', [0, orderresults[0].orderguid, req.headers.customerguid, changedate], function (error, Insertresults, fields) {
+                        connection.query('INSERT INTO `tbl_orderstatus_log` SET `orderstatus`=?,`orderguid`=?,`userguid`=?,`changedate`=?', [orderstatus, orderresults[0].orderguid, req.headers.customerguid, changedate], function (error, Insertresults, fields) {
                           if (error) throw error;
                           // For Delete Cart
                           connection.query('DELETE FROM tbl_cart WHERE userguid="'+req.headers.customerguid+'"', function (error, results, fields) {

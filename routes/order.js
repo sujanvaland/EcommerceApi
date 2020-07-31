@@ -80,6 +80,55 @@ var connection = require('../config/db');
       });
   });
 
+  //rest api to get a filter order data
+  app.post('/GetAllFilterOrders', function (req, res) {
+    var callbackCounter = 0;
+    var filterbyname="";
+    if(req.body.name !='' && req.body.name !=null)
+    {
+       filterbyname='and (firstname like "%'+req.body.name+'%" or lastname like "%'+req.body.name+'%")';
+    }
+
+    var filterbydaterange="";
+    if(req.body.startdate !='' && req.body.enddate !='')
+    {
+      filterbydaterange='and DATE(orderdate) >= "'+req.body.startdate+'" and DATE(orderdate) <= "'+req.body.enddate+'"';
+    }
+
+    var filterorderstatus="";
+    if(req.body.orderstatus !='' && req.body.orderstatus !=null)
+    {
+      filterorderstatus='and orderstatus= "'+req.body.orderstatus+'"';
+    }
+
+    connection.query('select *,(select CONCAT(firstname," ",lastname) from tbl_registration where userguid=tbl_order.staff_id) as staffname from tbl_order where id!="" '+filterbyname+' '+filterbydaterange+' '+filterorderstatus+' ', function (error, results, fields) {
+        if (error) throw error;
+        if(results.length > 0)
+        {
+         let orders = [];
+         results.forEach(element => { 
+           connection.query('select * from tbl_orderitem where orderguid="'+element.orderguid+'"', function (error, itemresults, fields) {
+             if (error) throw error;
+             element.orderitems = [];
+             itemresults.forEach(newelement => {
+               element.orderitems.push(newelement);
+             });
+             orders.push(element);
+             callbackCounter++;
+             if(results.length == callbackCounter)
+             {
+               res.send(orders);
+             }
+           });
+         });
+        }
+        else
+        {
+         res.send(results);
+        }
+     });
+  });
+
   //rest api to get a login order data
   app.post('/GetOrderInfo', function (req, res) {
     var callbackCounter = 0;
@@ -246,6 +295,75 @@ var connection = require('../config/db');
         }
     });
     
+  });
+ 
+  //rest api to get count of orders into mysql database
+  app.get('/GetOrdersCount', function (req, res) {
+    connection.query('select count(id) as orderCount from tbl_order', function (error, results, fields) {
+        if (error) throw error;
+        res.send(results);
+     });
+  });
+
+   //rest api to get sum of amount of today's orders into mysql database
+   app.get('/GetTodayOrdersAmount', function (req, res) {
+    var d=new Date();
+    month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+    if (month.length < 2) 
+        month = '0' + month;
+    if (day.length < 2) 
+        day = '0' + day;
+
+    var today= [year, month, day].join('-');
+
+    connection.query('select sum(grandtotal) as todayAmount from tbl_order where DATE(orderdate)="'+today+'" and orderstatus=5', function (error, results, fields) {
+        if (error) throw error;
+        res.send(results);
+     });
+  });
+
+  //rest api to get sum of amount of this month orders into mysql database
+  app.get('/GetThisMonthOrdersAmount', function (req, res) {
+    var d=new Date();
+    month = '' + (d.getMonth() + 1);
+    if (month.length < 2) 
+        month = '0' + month;
+    var thismonth= month;
+    connection.query('select sum(grandtotal) as thismonthamount from tbl_order where DATE_FORMAT(orderdate,"%m")="'+thismonth+'" and orderstatus=5', function (error, results, fields) {
+        if (error) throw error;
+        res.send(results);
+     });
+  });
+
+  //rest api to get sum of amount of all orders into mysql database
+  app.get('/GetTotalOrdersAmount', function (req, res) {
+    connection.query('select sum(grandtotal) as totalamount from tbl_order where orderstatus=5', function (error, results, fields) {
+        if (error) throw error;
+        res.send(results);
+     });
+  });
+
+  //rest api to get sum of amount of all orders into mysql database
+  app.get('/GetRecentOrders', function (req, res) {
+    var d=new Date();
+    month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+
+    if (month.length < 2) 
+        month = '0' + month;
+    if (day.length < 2) 
+        day = '0' + day;
+
+    var today= [year, month, day].join('-');
+
+    connection.query('select * from tbl_order where orderstatus=1 and DATE(orderdate)="'+today+'" order by orderdate desc limit 10', function (error, results, fields) {
+        if (error) throw error;
+        res.send(results);
+     });
   });
   
   module.exports = app;
