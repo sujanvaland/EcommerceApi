@@ -277,5 +277,23 @@ var upload = multer({ storage: storage,limits: {
       }
     });
   });
+
+  //rest api to update Device Token
+  app.post('/updatedevicetoken', function (req, res) {
+    var params  = req.body;
+    connection.query('select id from tbl_registration where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
+      if(results.length > 0)
+      {
+        connection.query('UPDATE `tbl_registration` SET `device_token`=? where `userguid`=?', [params.device_token, req.headers.customerguid], function (error, results, fields) {
+          if (error) throw error;
+            res.json({ Message:"success"});
+          });
+      }
+      else
+      {
+        res.json({ Message:"User Not Found."});
+      }
+    });
+  });
   
   module.exports = app;
