@@ -2,6 +2,10 @@ const express = require('express');
 const app = express();
 var connection = require('../config/db');
 const { v1: uuidv1 } = require('uuid');
+var request = require('request');
+var PushNotificationURL='https://fcm.googleapis.com/fcm/send';
+var AuthorizationKey='key=AAAAs35jvRM:APA91bHZN45AahBEKrYzlKkyJ7N87xuDyaB1aqyWPm5uMQlgmwEgDRTCops8Bk7MQyHBHWc_qTNFCAXbOaewCMSn1zZymDkQyFT7_AyGnzCek6hN8169AcPRTMKvWzOHwOzZKT7GFDul';
+var SenderId='770919611667';
 
   //rest api to get all deliverystaffs
   app.get('/deliverystaff', function (req, res) {
@@ -195,10 +199,96 @@ const { v1: uuidv1 } = require('uuid');
         var changedate= new Date();
         connection.query('INSERT INTO `tbl_orderstatus_log` SET `orderstatus`=?,`orderguid`=?,`userguid`=?,`changedate`=?', [req.body.orderstatus, req.body.orderguid, req.headers.customerguid, changedate], function (error, Insertresults, fields) {
           if (error) throw error;
-          res.send({Message:"success"});
+          connection.query('select assignorder from tbl_registration where isactive=1 and role_id=2 and userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
+            if (error) throw error;
+            if(results.length > 0)
+            {
+              var oldassignorder=results[0].assignorder;
+              var newone=1;
+              var assignorder=0;
+              if(req.body.orderstatus==5)
+                {
+                  if(oldassignorder > 0)
+                  {
+                    assignorder=(oldassignorder - 0) - (newone - 0);
+                  }
+                }
+              else
+                {
+                  assignorder=oldassignorder;
+                }
+              
+              connection.query('UPDATE `tbl_registration` SET `assignorder`=? where `userguid`=?', [assignorder, req.headers.customerguid], function (error, results, fields) {
+                if (error) throw error;
+                connection.query('select id,userguid from tbl_order where orderguid="'+req.body.orderguid+'"', function (error, orderresults, fields) {
+                  if (error) throw error;
+                  if(orderresults.length > 0)
+                    {
+                      var orderno=orderresults[0].id;
+                      var userguid=orderresults[0].userguid;
+                      var orderstatusvalue="";
+                      if(req.body.orderstatus==4)
+                      {
+                        orderstatusvalue="Pickup";
+                      }
+                      if(req.body.orderstatus==5)
+                      {
+                        orderstatusvalue="Delivered";
+                      }
+      
+                      if(orderstatusvalue !='' && orderno!='' && userguid !='')
+                      {
+                        connection.query('select device_token from tbl_registration where isactive=1 and role_id=3 and userguid="'+userguid+'"', function (error, results, fields) {
+                          if (error) throw error;
+                          if(results.length > 0)
+                          {
+                            var device_token=results[0].device_token;
+                            if(device_token!='')
+                            {
+                              var PushMessage="Your Order No. "+orderno+" has been "+orderstatusvalue+".";
+                              var options = {
+                                'method': 'POST',
+                                'url': PushNotificationURL,
+                                'headers': {
+                                  'Content-Type': 'application/json',
+                                  'Authorization': AuthorizationKey,
+                                  'Sender': SenderId
+                                },
+                                body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Order Status"}})
+                              };
+                              request(options, function (error, response) {
+                                if (error) throw new Error(error);
+                                res.send({Message:"success"});
+                              });
+                            }
+                            else
+                            {
+                              res.send({Message:"success"});
+                            }
+                          }
+                          else
+                          {
+                            res.send({Message:"success"});
+                          }
+                        });
+                      }  
+                      else
+                      {
+                        res.send({Message:"success"});
+                      }
+                    }
+                  else
+                    {
+                      res.send({Message:"success"});
+                    }
+                });
+              });
+            }
+          });
         });
       });
     });
+
 
   // Ends API for Mobile APP
   

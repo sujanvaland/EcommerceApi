@@ -430,6 +430,100 @@ var SenderId='770919611667';
     });
     
   });
+
+  //rest api to SendAssignStaffNotification
+  app.post('/SendAssignStaffNotification', function (req, res) {
+
+    connection.query('select id,staff_id,userguid from tbl_order where orderguid="'+req.body.orderguid+'"', function (error, orderresults, fields) {
+      if (error) throw error;
+      if(orderresults.length > 0)
+        {
+          var orderno=orderresults[0].id;
+          var staff_id=orderresults[0].staff_id;
+          var userguid=orderresults[0].userguid;
+
+          if(orderno !='' && staff_id!='' && userguid !='')
+          {
+            connection.query('select device_token from tbl_registration where isactive=1 and role_id=2 and userguid="'+staff_id+'"', function (error, results, fields) {
+              if (error) throw error;
+              if(results.length > 0)
+              {
+                var device_token=results[0].device_token;
+                if(device_token!='')
+                {
+                  var PushMessage="You have assign new Order No. "+orderno+".";
+                  var options = {
+                    'method': 'POST',
+                    'url': PushNotificationURL,
+                    'headers': {
+                      'Content-Type': 'application/json',
+                      'Authorization': AuthorizationKey,
+                      'Sender': SenderId
+                    },
+                    body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Assign Order"}})
+                  };
+                  request(options, function (error, response) {
+                    if (error) throw new Error(error);
+                    connection.query('select device_token,firstname,lastname,phone from tbl_registration where isactive=1 and role_id=3 and userguid="'+userguid+'"', function (error, results, fields) {
+                      if (error) throw error;
+                      if(results.length > 0)
+                      {
+                        var device_token=results[0].device_token;
+                        var firstname=results[0].firstname;
+                        var lastname=results[0].lastname;
+                        var phone=results[0].phone;
+                        if(device_token!='')
+                        {
+                          var PushMessage="Your Order No. "+orderno+" has been assign to "+firstname+" "+lastname+".";
+                          var options = {
+                            'method': 'POST',
+                            'url': PushNotificationURL,
+                            'headers': {
+                              'Content-Type': 'application/json',
+                              'Authorization': AuthorizationKey,
+                              'Sender': SenderId
+                            },
+                            body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Assign Order"}})
+                          };
+                          request(options, function (error, response) {
+                            if (error) throw new Error(error);
+                            res.send({Message:"success"});
+                          });
+                        }
+                        else
+                        {
+                          res.send({Message:"success"});
+                        }
+                      }
+                      else
+                      {
+                        res.send({Message:"success"});
+                      }
+                    });
+                  });
+                }
+                else
+                {
+                  res.send({Message:"Something was wrong."});
+                }
+              }
+              else
+              {
+                res.send({Message:"Something was wrong."});
+              }
+            });
+          }  
+          else
+          {
+            res.send({Message:"Something was wrong."});
+          }   
+        }
+      else
+      {
+        res.send({Message:"Something was wrong."});
+      }
+    });
+});
  
   //rest api to get count of orders into mysql database
   app.get('/GetOrdersCount', function (req, res) {
