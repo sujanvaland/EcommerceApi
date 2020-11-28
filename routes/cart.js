@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 var connection = require('../config/db');
 const { v1: uuidv1 } = require('uuid');
+const js_sha512_1 = require("js-sha512");
 
   
   //rest api to add cart data
@@ -92,6 +93,57 @@ const { v1: uuidv1 } = require('uuid');
        });
   });
 
+
+  //rest api to get paymentobject
+  app.post('/paymentobject', function (req, res) {
+    var params  = req.body;
+    var sql = "SELECT * from tbl_payu_config where isactive='1'";
+    connection.query(sql, function (error, results, fields) {
+         if (error) throw error;
+         if(results.length == 0)
+          {
+            res.json({ Message:"error",error_message:"Something Went Wrong. Please Try Again."});
+          }
+          else
+          {
+            $key=results[0].apikey;
+            $salt=results[0].apisalt;
+            $merchantId=results[0].merchantId;
+
+            $txnId=params.txnId;
+            $amount=params.finaltotal;
+            $productinfo=params.productName;
+            $firstname=params.firstname;
+            $email=params.email;
+            $phone=params.phone;
+
+            $hash=gethash($key,$amount,$email,$txnId,$productinfo,$firstname,$salt);
+            
+            $payData = {
+                amount: $amount,
+                txnId: $txnId,
+                productName: $productinfo,
+                firstName: $firstname,
+                email: $email,
+                phone: $phone,
+                merchantId: $merchantId,
+                key: $key,
+                successUrl: 'https://www.payumoney.com/mobileapp/payumoney/success.php',
+                failedUrl: 'https://www.payumoney.com/mobileapp/payumoney/failure.php',
+                isDebug: true,
+                hash:$hash,
+            }
+            res.json({ Message:"success",payData:$payData}); 
+          }
+    });
+  });
+
+  function gethash(key, amount, email, txnId, productName, firstName, salt, udf1 = "", udf2 = "", udf3 = "", udf4 = "", udf5 = "", udf6 = "", udf7 = "", udf8 = "", udf9 = "", udf10 = "")
+  {
+    const hashString = `${key}|${txnId}|${amount}|${productName}|${firstName}|${email}|${udf1}|${udf2}|${udf3}|${udf4}|${udf5}|${udf6}|${udf7}|${udf8}|${udf9}|${udf10}|${salt}`;
+    return js_sha512_1.sha512(hashString);
+  }
+
   //rest api to Place Order data
   app.post('/placeorder', function (req, res) {
     var params  = req.body;
@@ -108,6 +160,19 @@ const { v1: uuidv1 } = require('uuid');
           if (error) throw error;
           if(addressresults.length > 0)
           {
+
+            var paymentstatus="";
+            var transactionid="";
+            if(req.body.paymenttype==2)
+            {
+               var paymentdata = req.body.paymentdata;
+               if(paymentdata!='')
+               {
+                  var paymentstatus="";
+                  var transactionid="";
+               }
+            }
+
             var orderstatus = 1;
             var subtotal=results[0].subtotal;
             var deliverycharge=0;
@@ -135,7 +200,9 @@ const { v1: uuidv1 } = require('uuid');
               "grandtotal":ordertotal,
               "deliverycharge":deliverycharge,
               "orderstatus":orderstatus,
-              "orderdate": new Date()
+              "orderdate": new Date(),
+              "paymentstatus":paymentstatus,
+              "transactionid":transactionid
             }
             
             // For Insert Order
@@ -280,6 +347,22 @@ const { v1: uuidv1 } = require('uuid');
         {
           res.send({Message:"No Items in this Order."});
         }
+     });
+  });
+
+  //rest api to get Order Detail
+  app.post('/orderdetail', function (req, res) {
+    
+    connection.query('select * from tbl_order where orderguid="'+req.body.orderguid+'"', function (error, results, fields) {
+        if (error) throw error;
+        if(results.length)
+          {
+            res.json({ Message:"success",results});
+          }
+          else
+          {
+            res.send({Message:"No Orders in List"});
+          }
      });
   });
 
