@@ -3,6 +3,11 @@ const app = express();
 var connection = require('../config/db');
 const { v1: uuidv1 } = require('uuid');
 const js_sha512_1 = require("js-sha512");
+var request = require('request');
+var SendSMSURL='http://dnd.smssetu.co.in/smsstatuswithid.aspx';
+var SMSusername='9687268055';
+var SMSpassword='TDM055VDR';
+var SMSsenderId='SMSetu';
 
   
   //rest api to add cart data
@@ -163,17 +168,26 @@ const js_sha512_1 = require("js-sha512");
 
             var paymentstatus="";
             var transactionid="";
+            var responsedata="";
+            var orderstatus = 1;
             if(req.body.paymenttype==2)
             {
                var paymentdata = req.body.paymentdata;
-               if(paymentdata!='')
+               //console.log(paymentdata);
+               if(paymentdata.success)
                {
-                  var paymentstatus="";
-                  var transactionid="";
+                  var paymentstatus=paymentdata.response.result.status;
+                  var transactionid=paymentdata.response.result.txnid;
+                  var responsedata=paymentdata.response.toString();
+               }
+               else
+               {
+                 var paymentstatus="failed";
+                 var orderstatus = 6;
                }
             }
 
-            var orderstatus = 1;
+            
             var subtotal=results[0].subtotal;
             var deliverycharge=0;
             var ordertotal=(subtotal - 0) + (deliverycharge - 0);
@@ -202,7 +216,8 @@ const js_sha512_1 = require("js-sha512");
               "orderstatus":orderstatus,
               "orderdate": new Date(),
               "paymentstatus":paymentstatus,
-              "transactionid":transactionid
+              "transactionid":transactionid,
+              "responsedata":responsedata
             }
             
             // For Insert Order
@@ -224,7 +239,23 @@ const js_sha512_1 = require("js-sha512");
                           // For Delete Cart
                           connection.query('DELETE FROM tbl_cart WHERE userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
                             if (error) throw error;
-                            res.json({ Message:"success",orderguid:orderguid});
+                            if(paymentstatus=="failed")
+                            {
+                               var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed Failed.";
+                            }
+                            else
+                            {
+                              var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed success.";
+                            }
+                            
+                            var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to=9998216456&msg="+SendMessage;
+                              
+                            request(SendUrl, function (error, response) {
+                              if (error) throw new Error(error);
+                              res.send({Message:"success"});
+                            });
+
+                            res.json({ Message:"success",orderguid:orderguid,paymentstatus:paymentstatus});
                           });
                         });
                     });
