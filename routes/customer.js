@@ -141,5 +141,38 @@ var connection = require('../config/db');
         res.send(results);
      });
   });
+
+  //rest api to get a Mobile APP Version Info data
+  app.post('/GetMobileAppVersionInfo', function (req, res) {
+    connection.query('select * from tbl_app_version where id="'+req.body.Id+'"', function (error, results, fields) {
+       if (error) throw error;
+       res.send(results);
+     });
+  });
+
+  //rest api to Change a Mobile APP Version Info data
+  app.post('/ChangeMobileAppVersion', function (req, res) {
+    var params  = req.body;
+    connection.query('select id from tbl_app_version where id="1"', function (error, results, fields) {
+      if (error) throw error;
+      if(results.length)
+       {
+          connection.query('select id from tbl_app_version where id="1" and app_version="'+params.OldVersion+'"', function (error, results, fields) {
+            if (error) throw error;
+            if(results.length)
+              {
+                connection.query('UPDATE `tbl_app_version` SET `app_version`=?,`isrequired`=? where `id`=?', [params.NewVersion, params.isrequired, 1], function (error, results, fields) {
+                  if (error) throw error;
+                  res.json({ Message:"success"});
+                });
+              }
+              else
+              {
+                res.json({ Message:"Old version is wrong!."});
+              }
+          });
+       }
+    });
+  });
   
   module.exports = app;

@@ -6,6 +6,13 @@ var PushNotificationURL='https://fcm.googleapis.com/fcm/send';
 var AuthorizationKey='key=AAAAs35jvRM:APA91bHZN45AahBEKrYzlKkyJ7N87xuDyaB1aqyWPm5uMQlgmwEgDRTCops8Bk7MQyHBHWc_qTNFCAXbOaewCMSn1zZymDkQyFT7_AyGnzCek6hN8169AcPRTMKvWzOHwOzZKT7GFDul';
 var SenderId='770919611667';
 
+// SMS Configuration
+var SendSMSURL='http://dnd.smssetu.co.in/smsstatuswithid.aspx';
+var SMSusername='9687268055';
+var SMSpassword='TDM055VDR';
+var SMSsenderId='TDMEAT';
+var adminPhone='9687268055';
+
   //rest api to get all orders
   app.get('/order', function (req, res) {
     var callbackCounter = 0;
@@ -310,6 +317,18 @@ var SenderId='770919611667';
               if (error) throw error;
               if(results.length > 0)
               {
+                if(req.body.orderstatus==5 || req.body.orderstatus==6)
+                {
+                  var phone=adminPhone;
+                  if(phone!='')
+                  {
+                    // For SMS Notification
+                    var SendMessage="Order No. "+orderno+" has been "+orderstatusvalue+".";
+                    var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+phone+"&msg="+SendMessage;
+                    request(SendUrl, function (error, response) {});
+                  }
+                }
+
                 var device_token=results[0].device_token;
                 if(device_token!='')
                 {
@@ -398,6 +417,88 @@ var SenderId='770919611667';
     });
 });
 
+//rest api to SendOrderStatusSMSNotification
+app.post('/SendOrderStatusSMSNotification', function (req, res) {
+  connection.query('select id,staff_id,userguid from tbl_order where orderguid="'+req.body.orderguid+'"', function (error, orderresults, fields) {
+    if (error) throw error;
+    if(orderresults.length > 0)
+      {
+        var orderno=orderresults[0].id;
+        var staff_id=orderresults[0].staff_id;
+        var userguid=orderresults[0].userguid;
+
+        var orderstatusvalue="";
+        if(req.body.orderstatus==1)
+        {
+          orderstatusvalue="Pending";
+        }
+        if(req.body.orderstatus==2)
+        {
+          orderstatusvalue="Confirmed";
+        }
+        if(req.body.orderstatus==3)
+        {
+          orderstatusvalue="Ready";
+        }
+        if(req.body.orderstatus==4)
+        {
+          orderstatusvalue="Pickup";
+        }
+        if(req.body.orderstatus==5)
+        {
+          orderstatusvalue="Delivered";
+        }
+        if(req.body.orderstatus==6)
+        {
+          orderstatusvalue="Cancelled";
+        }
+
+        if(orderstatusvalue !='' && orderno!='' && userguid !='')
+        {
+          connection.query('select device_token from tbl_registration where isactive=1 and role_id=3 and userguid="'+userguid+'"', function (error, results, fields) {
+            if (error) throw error;
+            if(results.length > 0)
+            {
+              if(req.body.orderstatus==5 || req.body.orderstatus==6)
+              {
+                var phone=adminPhone;
+                if(phone!='')
+                {
+                  // For SMS Notification
+                  var SendMessage="Order No. "+orderno+" has been "+orderstatusvalue+".";
+                  var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+phone+"&msg="+SendMessage;
+                  request(SendUrl, function (error, response) {
+                    res.send({Message:"success"});
+                  });
+                }
+                else
+                {
+                  res.send({Message:"Something was wrong."});
+                }
+              }
+              else
+              {
+                res.send({Message:"Something was wrong."});
+              }
+            }
+            else
+            {
+              res.send({Message:"Something was wrong."});
+            }
+          });
+        }  
+        else
+        {
+          res.send({Message:"Something was wrong."});
+        }   
+      }
+    else
+    {
+      res.send({Message:"Something was wrong."});
+    }
+  });
+});
+
   //rest api to get all active staff into mysql database
   app.get('/GetAllActiveStaff', function (req, res) {
     connection.query('select firstname,lastname,userguid,assignorder from tbl_registration where isactive=1 and role_id=2 and onride=0 and assignorder < 2', function (error, results, fields) {
@@ -451,6 +552,7 @@ var SenderId='770919611667';
                 var device_token=results[0].device_token;
                 if(device_token!='')
                 {
+                  // For Push Notification
                   var PushMessage="You have assign new Order No. "+orderno+".";
                   var options = {
                     'method': 'POST',
@@ -523,6 +625,117 @@ var SenderId='770919611667';
         res.send({Message:"Something was wrong."});
       }
     });
+});
+
+//rest api to SendAssignStaffSMSNotification
+app.post('/SendAssignStaffSMSNotification', function (req, res) {
+
+  connection.query('select id,staff_id,userguid from tbl_order where orderguid="'+req.body.orderguid+'"', function (error, orderresults, fields) {
+    if (error) throw error;
+    if(orderresults.length > 0)
+      {
+        var orderno=orderresults[0].id;
+        var staff_id=orderresults[0].staff_id;
+        var userguid=orderresults[0].userguid;
+
+        if(orderno !='' && staff_id!='' && userguid !='')
+        {
+          connection.query('select phone from tbl_registration where isactive=1 and role_id=2 and userguid="'+staff_id+'"', function (error, results, fields) {
+            if (error) throw error;
+            if(results.length > 0)
+            {
+              
+              var phone=results[0].phone;
+              if(phone!='')
+              {
+                // For SMS Notification
+                var SendMessage="You have assign new Order No. "+orderno+".";
+                var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+phone+"&msg="+SendMessage;
+                request(SendUrl, function (error, response) {
+                  res.send({Message:"success"});
+                });
+              }
+              else
+              {
+                res.send({Message:"Something was wrong."});
+              }
+            }
+            else
+            {
+              res.send({Message:"Something was wrong."});
+            }
+          });
+        }  
+        else
+        {
+          res.send({Message:"Something was wrong."});
+        }   
+      }
+    else
+    {
+      res.send({Message:"Something was wrong."});
+    }
+  });
+});
+
+//rest api to get count of todays's orders into mysql database
+app.get('/GetTodayOrdersCount', function (req, res) {
+  var d=new Date();
+  month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
+
+  if (month.length < 2) 
+      month = '0' + month;
+  if (day.length < 2) 
+      day = '0' + day;
+
+  var today= [year, month, day].join('-');
+
+  connection.query('select count(id) as todayorderCount from tbl_order where DATE(orderdate)="'+today+'"', function (error, results, fields) {
+      if (error) throw error;
+      res.send(results);
+   });
+});
+
+//rest api to get count of todays's exicuted orders into mysql database
+app.get('/GetTodayExicutedOrdersCount', function (req, res) {
+  var d=new Date();
+  month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
+
+  if (month.length < 2) 
+      month = '0' + month;
+  if (day.length < 2) 
+      day = '0' + day;
+
+  var today= [year, month, day].join('-');
+
+  connection.query('select count(id) as todayexicutedorderCount from tbl_order where DATE(orderdate)="'+today+'" and (orderstatus=5 or orderstatus=6)', function (error, results, fields) {
+      if (error) throw error;
+      res.send(results);
+   });
+});
+
+//rest api to get count of todays's pending orders into mysql database
+app.get('/GetTodayPendingOrdersCount', function (req, res) {
+  var d=new Date();
+  month = '' + (d.getMonth() + 1),
+      day = '' + d.getDate(),
+      year = d.getFullYear();
+
+  if (month.length < 2) 
+      month = '0' + month;
+  if (day.length < 2) 
+      day = '0' + day;
+
+  var today= [year, month, day].join('-');
+
+  connection.query('select count(id) as todaypendingorderCount from tbl_order where DATE(orderdate)="'+today+'" and orderstatus!=5 and orderstatus!=6', function (error, results, fields) {
+      if (error) throw error;
+      res.send(results);
+   });
 });
  
   //rest api to get count of orders into mysql database

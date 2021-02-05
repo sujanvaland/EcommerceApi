@@ -12,16 +12,26 @@ const nodemailer = require('nodemailer');
 
 // For localhost Auth
 var transporter = nodemailer.createTransport({
-  //host: '125.0.0.1',
-  host: '45.35.0.114',
-  port:25
+  host: "mail.thedailymeat.in",
+  port: 465,
+  secure: true, // upgrade later with STARTTLS
+  auth: {
+    user: "system@thedailymeat.in",
+    pass: "Firefox@001"
+  }
 });
-
 /* Mailer Code End */
   
 let refreshTokens = [];
 
-let fromemail = 'kunal1990patel@gmail.com';
+let fromemail = 'contact@thedailymeat.in';
+
+// SMS Code Start
+var request = require('request');
+var SendSMSURL='http://dnd.smssetu.co.in/smsstatuswithid.aspx';
+var SMSusername='9687268055';
+var SMSpassword='TDM055VDR';
+var SMSsenderId='TDMEAT';
 
 //rest api to create a new tbl_registration record into mysql database
 app.post('/register', function (req, res) {
@@ -101,7 +111,7 @@ app.post('/customer_login',(req,res) =>{
   //Authenticate user
   const username = req.body.Email;
   const password = req.body.Password;
-  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id,isactive,customerimage,birthdate,gender,(select sum(qty) from tbl_cart where userguid=tbl_registration.userguid) as countcartitems FROM `tbl_registration` WHERE username="'+username+'" and password="'+password+'" and role_id=3', function (error, results, fields) {
+  connection.query('SELECT id,firstname,lastname,email,phone,userguid,username,role_id,isactive,customerimage,birthdate,gender,send_otp,(select sum(qty) from tbl_cart where userguid=tbl_registration.userguid) as countcartitems FROM `tbl_registration` WHERE username="'+username+'" and password="'+password+'" and role_id=3', function (error, results, fields) {
     if (error) throw error;
     if(results.length)
     {
@@ -117,27 +127,39 @@ app.post('/customer_login',(req,res) =>{
       else
       {
         var send_otp=results[0].send_otp;
-        var toemail=results[0].email;
 
-        var mailOptions = {
-          from: fromemail,
-          to: toemail,
-          subject: 'Send OTP Mail',
-          text: 'Verify your account.\n\n' +
-          'Below is your one time passcode:\n\n' +
-           send_otp + '\n\n' +
-          'We are here to help if you need it.\n'
-        };
-        
-        transporter.sendMail(mailOptions, function(error, info){
-          if (error) {
-            console.log(error);
-          } else {
-            console.log('Email sent: ' + info.response);
-          }
+        //Send SMS
+        var tophone=results[0].phone;
+        var SendMessage="Your one time passcode for activate account is " +send_otp;
+        //var SendMessage="Your one time passcode for activate account:0000";
+        var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+tophone+"&msg="+SendMessage;
+                        
+        request(SendUrl, function (error, response) {
+          //if (error) throw new Error(error);
         });
 
-        res.json({ Message:"Please Verify Your Account.",results});
+        // Send Email
+          var toemail=results[0].email;
+
+          var mailOptions = {
+            from: fromemail,
+            to: toemail,
+            subject: 'Send OTP Mail',
+            text: 'Verify your account.\n\n' +
+            'Below is your one time passcode:\n\n' +
+            send_otp + '\n\n' +
+            'We are here to help if you need it.\n'
+          };
+          
+          transporter.sendMail(mailOptions, function(error, info){
+            if (error) {
+              console.log(error);
+            } else {
+              console.log('Email sent: ' + info.response);
+            }
+          });
+
+          res.json({ Message:"Please Verify Your Account.",results});
       }
       
     }
@@ -208,8 +230,8 @@ app.post('/customer_signup', function (req, res) {
         params.registration_date= new Date();
         params.userguid=uuidv1();
         params.role_id=3;
-        //params.send_otp=Math.floor(1000 + Math.random() * 9000);
-        params.send_otp='0000';
+        params.send_otp=Math.floor(1000 + Math.random() * 9000);
+        //params.send_otp='0000';
         params.isactive = 0;
               
         connection.query('INSERT INTO `tbl_registration` SET ?', params, function (error, Insertresults, fields) {
@@ -217,6 +239,17 @@ app.post('/customer_signup', function (req, res) {
 
           if(Insertresults.insertId > 0)
             {
+
+              //Send SMS
+              var SendMessage="Your one time passcode for activate account is " +params.send_otp;
+              var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+params.phone+"&msg="+SendMessage;
+                              
+              request(SendUrl, function (error, response) {
+                //console.log(error);
+              });
+
+              //Send Email
+
               var mailOptions = {
                 from: fromemail,
                 to: results.email,
@@ -287,30 +320,49 @@ app.post('/customer_reset_password',(req,res) =>{
     {
       var tamppassword=Math.floor(10000000 + Math.random() * 90000000);
       connection.query('update tbl_registration set password="'+tamppassword+'" where username="'+username+'"', function (error, results1, fields) {
-        var mailOptions = {
-          from: fromemail,
-          to: results.email,
-          subject: 'Password Recovery Mail',
-          text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
-          'Please use temporary password, or change this into your mobile application to complete the process:\n\n' +
-          'Temporary password is : ' + tamppassword + '\n\n' +
-          'Do not share anyone.\n'
-        };
         
-        transporter.sendMail(mailOptions, function(error, info){
+        //Send SMS
+        var tophone=results[0].phone;
+        var SendMessage="Your temporary password for login account is " + tamppassword;
+        //var SendMessage="Temporary password for login account is 0000";
+        //var SendMessage="Your one time passcode for activate account:0000";
+        var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+tophone+"&msg="+SendMessage;
+                        
+        request(SendUrl, function (error, response) {
           if (error) {
-            console.log(error);
-          } else {
-            console.log('Email sent: ' + info.response);
+            res.json({ Message:"Something went Wrong!!!"});
+          }
+          else
+          {
+            res.json({ Message:"success",results});
           }
         });
+
+        //Send Email
+        // var mailOptions = {
+        //   from: fromemail,
+        //   to: results.email,
+        //   subject: 'Password Recovery Mail',
+        //   text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
+        //   'Please use temporary password, or change this into your mobile application to complete the process:\n\n' +
+        //   'Temporary password is : ' + tamppassword + '\n\n' +
+        //   'Do not share anyone.\n'
+        // };
         
-        res.json({ Message:"success",results});
+        // transporter.sendMail(mailOptions, function(error, info){
+        //   if (error) {
+        //     console.log(error);
+        //   } else {
+        //     console.log('Email sent: ' + info.response);
+        //   }
+        // });
+        
+        
       });
     }
     else
     {
-      res.json({ Message:"missing_required_fields:email"});
+      res.json({ Message:"missing_required_fields:username"});
     }
     
   });
@@ -327,25 +379,43 @@ app.post('/deliverystaff_reset_password',(req,res) =>{
     {
       var tamppassword=Math.floor(10000000 + Math.random() * 90000000);
       connection.query('update tbl_registration set password="'+tamppassword+'" where username="'+username+'"', function (error, results1, fields) {
-        var mailOptions = {
-          from: fromemail,
-          to: results.email,
-          subject: 'Password Recovery Mail',
-          text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
-          'Please use temporary password, or change this into your mobile application to complete the process:\n\n' +
-          'Temporary password is : ' + tamppassword + '\n\n' +
-          'Do not share anyone.\n'
-        };
         
-        transporter.sendMail(mailOptions, function(error, info){
+        //Send SMS
+        var tophone=results[0].phone;
+        var SendMessage="Your temporary password for login account is " + tamppassword;
+        //var SendMessage="Temporary password for login account is 0000";
+        //var SendMessage="Your one time passcode for activate account:0000";
+        var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+tophone+"&msg="+SendMessage;
+                        
+        request(SendUrl, function (error, response) {
           if (error) {
-            console.log(error);
-          } else {
-            console.log('Email sent: ' + info.response);
+            res.json({ Message:"Something went Wrong!!!"});
+          }
+          else
+          {
+            res.json({ Message:"success",results});
           }
         });
+
+        // var mailOptions = {
+        //   from: fromemail,
+        //   to: results.email,
+        //   subject: 'Password Recovery Mail',
+        //   text: 'You are receiving this because you (or someone else) have requested the reset of the password for your account.\n\n' +
+        //   'Please use temporary password, or change this into your mobile application to complete the process:\n\n' +
+        //   'Temporary password is : ' + tamppassword + '\n\n' +
+        //   'Do not share anyone.\n'
+        // };
         
-        res.json({ Message:"success",results});
+        // transporter.sendMail(mailOptions, function(error, info){
+        //   if (error) {
+        //     console.log(error);
+        //   } else {
+        //     console.log('Email sent: ' + info.response);
+        //   }
+        // });
+        
+        // res.json({ Message:"success",results});
       });
     }
     else

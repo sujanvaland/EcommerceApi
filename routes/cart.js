@@ -7,7 +7,8 @@ var request = require('request');
 var SendSMSURL='http://dnd.smssetu.co.in/smsstatuswithid.aspx';
 var SMSusername='9687268055';
 var SMSpassword='TDM055VDR';
-var SMSsenderId='SMSetu';
+var SMSsenderId='TDMEAT';
+var adminPhone='9687268055';
 
   
   //rest api to add cart data
@@ -135,7 +136,7 @@ var SMSsenderId='SMSetu';
                 key: $key,
                 successUrl: 'https://www.payumoney.com/mobileapp/payumoney/success.php',
                 failedUrl: 'https://www.payumoney.com/mobileapp/payumoney/failure.php',
-                isDebug: true,
+                isDebug: false,
                 hash:$hash,
             }
             res.json({ Message:"success",payData:$payData}); 
@@ -248,13 +249,25 @@ var SMSsenderId='SMSetu';
                               var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed success.";
                             }
                             
-                            var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to=9998216456&msg="+SendMessage;
+                            var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+addressresults[0].bphone+"&msg="+SendMessage;
                               
                             request(SendUrl, function (error, response) {
-                              if (error) throw new Error(error);
-                              res.send({Message:"success"});
+                              //if (error) throw new Error(error);
+                              //res.json({ Message:"success",orderguid:orderguid,paymentstatus:paymentstatus});
+                              if(paymentstatus!="failed")
+                              {
+                                var phone=adminPhone;
+                                if(phone!='')
+                                {
+                                  // For SMS Notification
+                                  var SendAdminMessage="Order No. "+Insertresults.insertId+" has been placed success.";
+                                  var SendAdminUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+phone+"&msg="+SendAdminMessage;
+                                  request(SendAdminUrl, function (error, response) {
+                                    res.json({ Message:"success",orderguid:orderguid,paymentstatus:paymentstatus});
+                                  });
+                                }
+                              }
                             });
-
                             res.json({ Message:"success",orderguid:orderguid,paymentstatus:paymentstatus});
                           });
                         });
