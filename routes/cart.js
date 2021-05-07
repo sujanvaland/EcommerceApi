@@ -242,11 +242,14 @@ var adminPhone='9687268055';
                             if (error) throw error;
                             if(paymentstatus=="failed")
                             {
-                               var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed Failed.";
+                              
+                              var SendMessage="Your Order No. "+Insertresults.insertId+" has not been confirmed. please try again later.";
+                              //var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed Failed.";
                             }
                             else
                             {
-                              var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed success.";
+                              var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed successfully. Thank you for shopping with us. Hope your experience with us will be as fresh and delicious as our product.";
+                              //var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed success.";
                             }
                             
                             var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+addressresults[0].bphone+"&msg="+SendMessage;
@@ -260,7 +263,9 @@ var adminPhone='9687268055';
                                 if(phone!='')
                                 {
                                   // For SMS Notification
-                                  var SendAdminMessage="Order No. "+Insertresults.insertId+" has been placed success.";
+                                  
+                                  var SendAdminMessage="Order No. "+Insertresults.insertId+" has been placed successfully. please confirm.";
+                                  //var SendAdminMessage="Order No. "+Insertresults.insertId+" has been placed success.";
                                   var SendAdminUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+phone+"&msg="+SendAdminMessage;
                                   request(SendAdminUrl, function (error, response) {
                                     res.json({ Message:"success",orderguid:orderguid,paymentstatus:paymentstatus});

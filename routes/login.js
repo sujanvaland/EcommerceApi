@@ -130,7 +130,8 @@ app.post('/customer_login',(req,res) =>{
 
         //Send SMS
         var tophone=results[0].phone;
-        var SendMessage="Your one time passcode for activate account is " +send_otp;
+        var SendMessage="HI, "+send_otp+" is Your Verification code(O.T.P) for activating account. Thank you for using THE DAILY MEAT. Please do not share OTP with anyone.";
+        //var SendMessage="Your one time passcode for activate account is " +send_otp;
         //var SendMessage="Your one time passcode for activate account:0000";
         var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+tophone+"&msg="+SendMessage;
                         
@@ -241,7 +242,8 @@ app.post('/customer_signup', function (req, res) {
             {
 
               //Send SMS
-              var SendMessage="Your one time passcode for activate account is " +params.send_otp;
+              var SendMessage="HI, "+params.send_otp+" is Your Verification code(O.T.P) for activating account. Thank you for using THE DAILY MEAT. Please do not share OTP with anyone.";
+              //var SendMessage="Your one time passcode for activate account is " +params.send_otp;
               var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+params.phone+"&msg="+SendMessage;
                               
               request(SendUrl, function (error, response) {
@@ -323,7 +325,8 @@ app.post('/customer_reset_password',(req,res) =>{
         
         //Send SMS
         var tophone=results[0].phone;
-        var SendMessage="Your temporary password for login account is " + tamppassword;
+        var SendMessage="Your temporary password for login account is "+tamppassword+". Thank you for using THE DAILY MEAT. Please do not share your password with anyone.";
+        //var SendMessage="Your temporary password for login account is " + tamppassword;
         //var SendMessage="Temporary password for login account is 0000";
         //var SendMessage="Your one time passcode for activate account:0000";
         var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+tophone+"&msg="+SendMessage;
@@ -382,7 +385,8 @@ app.post('/deliverystaff_reset_password',(req,res) =>{
         
         //Send SMS
         var tophone=results[0].phone;
-        var SendMessage="Your temporary password for login account is " + tamppassword;
+        var SendMessage="Your temporary password for login account is "+tamppassword+". Thank you for using THE DAILY MEAT. Please do not share your password with anyone.";
+        //var SendMessage="Your temporary password for login account is " + tamppassword;
         //var SendMessage="Temporary password for login account is 0000";
         //var SendMessage="Your one time passcode for activate account:0000";
         var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+tophone+"&msg="+SendMessage;

@@ -245,7 +245,8 @@ var SenderId='770919611667';
                             var device_token=results[0].device_token;
                             if(device_token!='')
                             {
-                              var PushMessage="Your Order No. "+orderno+" has been "+orderstatusvalue+".";
+                              var PushMessage="Your Order No. "+orderno+" has been "+orderstatusvalue+". For any queries please contact us on: thedailymeat786@gmail.com";
+                              //var PushMessage="Your Order No. "+orderno+" has been "+orderstatusvalue+".";
                               var options = {
                                 'method': 'POST',
                                 'url': PushNotificationURL,

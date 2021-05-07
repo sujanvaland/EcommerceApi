@@ -241,7 +241,7 @@ var upload = multer({ storage: storage,limits: {
                         params.slug=slug(params.name);
                         params.categoryimage= req.file.filename;
 
-                        connection.query('UPDATE `tbl_categorymaster` SET `name`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`categoryimage`=?,`level`=?,`shortdesc`=? where `id`=?', [params.name, params.slug, params.cat, params.sortorder, params.isactive, params.categoryimage, params.level, parms.shortdesc, params.id], function (error, results, fields) {
+                        connection.query('UPDATE `tbl_categorymaster` SET `name`=?,`slug`=?,`cat`=?,`sortorder`=?,`isactive`=?,`categoryimage`=?,`level`=?,`shortdesc`=? where `id`=?', [params.name, params.slug, params.cat, params.sortorder, params.isactive, params.categoryimage, params.level, params.shortdesc, params.id], function (error, results, fields) {
                           if (error) throw error;
                             res.json({ Message:"success",results});
                           });

@@ -332,7 +332,8 @@ var adminPhone='9687268055';
                 var device_token=results[0].device_token;
                 if(device_token!='')
                 {
-                  var PushMessage="Your Order No. "+orderno+" has been "+orderstatusvalue+".";
+                  var PushMessage="Your Order No. "+orderno+" has been "+orderstatusvalue+". For any queries please contact us on: thedailymeat786@gmail.com";
+                  //var PushMessage="Your Order No. "+orderno+" has been "+orderstatusvalue+".";
                   var options = {
                     'method': 'POST',
                     'url': PushNotificationURL,
@@ -553,7 +554,8 @@ app.post('/SendOrderStatusSMSNotification', function (req, res) {
                 if(device_token!='')
                 {
                   // For Push Notification
-                  var PushMessage="You have assign new Order No. "+orderno+".";
+                  var PushMessage="a new Order No. "+orderno+" have been assigned to you. Pls confirm.";
+                  //var PushMessage="You have assign new Order No. "+orderno+".";
                   var options = {
                     'method': 'POST',
                     'url': PushNotificationURL,
@@ -649,7 +651,8 @@ app.post('/SendAssignStaffSMSNotification', function (req, res) {
               if(phone!='')
               {
                 // For SMS Notification
-                var SendMessage="You have assign new Order No. "+orderno+".";
+                var SendMessage="a new Order No. "+orderno+" have been assigned to you. Pls confirm.";
+                //var SendMessage="You have assign new Order No. "+orderno+".";
                 var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+phone+"&msg="+SendMessage;
                 request(SendUrl, function (error, response) {
                   res.send({Message:"success"});
