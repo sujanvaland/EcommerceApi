@@ -35,7 +35,9 @@ app.post('/productdetail', function (req, res) {
 
 //rest api to get new arival product
 app.get('/newarrivalproduct', function (req, res) {
-  connection.query('select * from tbl_product where isactive=1 and isnewarrival=1 ORDER BY id desc limit 2', function (error, results, fields) {
+  var sql = "SELECT *,(select instock from tbl_location_stock where pid=tbl_product.id and location='"+req.headers.location+"') as productinstock from tbl_product where isactive=1 and isnewarrival=1 ORDER BY id desc limit 2";
+  
+  connection.query(sql, function (error, results, fields) {
       if (error) throw error;
       if(results.length > 0)
       {
