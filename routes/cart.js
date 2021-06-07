@@ -8,7 +8,8 @@ var SendSMSURL='http://dnd.smssetu.co.in/smsstatuswithid.aspx';
 var SMSusername='9687268055';
 var SMSpassword='TDM055VDR';
 var SMSsenderId='TDMEAT';
-var adminPhone='9687268055';
+//var adminPhone='9687268055';
+var adminPhone='9998216456';
 
   
   //rest api to add cart data
@@ -166,6 +167,17 @@ var adminPhone='9687268055';
           if (error) throw error;
           if(addressresults.length > 0)
           {
+            var bphone=addressresults[0].bphone;
+            if(addressresults[0].bphone=='')
+            {
+              connection.query('select phone from tbl_registration where userguid="'+req.headers.customerguid+'"', function (error, userresults, fields) {
+                if (error) throw error;
+                if(userresults.length > 0)
+                {
+                  bphone=userresults[0].phone;
+                }
+              });
+            }
 
             var paymentstatus="";
             var transactionid="";
@@ -198,7 +210,7 @@ var adminPhone='9687268055';
               "addresstype":addressresults[0].addresstype,
               "firstname":addressresults[0].bfirstname,
               "lastname":addressresults[0].blastname,
-              "phone":addressresults[0].bphone,
+              "phone":bphone,
               "email":'',
               "door_no_build_no_street":addressresults[0].door_no_build_no_street,
               "locality":addressresults[0].locality,
@@ -235,7 +247,7 @@ var adminPhone='9687268055';
                     connection.query(orderitemsql, function (error, InsertItemresults, fields) {
                         if (error) throw error;
                         var changedate= new Date();
-                        connection.query('INSERT INTO `tbl_orderstatus_log` SET `orderstatus`=?,`orderguid`=?,`userguid`=?,`changedate`=?', [orderstatus, orderresults[0].orderguid, req.headers.customerguid, changedate], function (error, Insertresults, fields) {
+                        connection.query('INSERT INTO `tbl_orderstatus_log` SET `orderstatus`=?,`orderguid`=?,`userguid`=?,`changedate`=?', [orderstatus, orderresults[0].orderguid, req.headers.customerguid, changedate], function (error, Insertresultsorderstatus, fields) {
                           if (error) throw error;
                           // For Delete Cart
                           connection.query('DELETE FROM tbl_cart WHERE userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
@@ -243,7 +255,7 @@ var adminPhone='9687268055';
                             if(paymentstatus=="failed")
                             {
                               
-                              var SendMessage="Your Order No. "+Insertresults.insertId+" has not been confirmed. please try again later.";
+                              var SendMessage="Your Order No. "+Insertresults.insertId+" has not been confirmed. Please try again later.";
                               //var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed Failed.";
                             }
                             else
@@ -252,8 +264,8 @@ var adminPhone='9687268055';
                               //var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed success.";
                             }
                             
-                            var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+addressresults[0].bphone+"&msg="+SendMessage;
-                              
+                            var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+bphone+"&msg="+SendMessage;
+                            //res.json({ Message:"error",SendUrl}); 
                             request(SendUrl, function (error, response) {
                               //if (error) throw new Error(error);
                               //res.json({ Message:"success",orderguid:orderguid,paymentstatus:paymentstatus});
@@ -263,8 +275,7 @@ var adminPhone='9687268055';
                                 if(phone!='')
                                 {
                                   // For SMS Notification
-                                  
-                                  var SendAdminMessage="Order No. "+Insertresults.insertId+" has been placed successfully. please confirm.";
+                                  var SendAdminMessage="Order No. "+Insertresults.insertId+" has been placed successfully. Please confirm.";
                                   //var SendAdminMessage="Order No. "+Insertresults.insertId+" has been placed success.";
                                   var SendAdminUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+phone+"&msg="+SendAdminMessage;
                                   request(SendAdminUrl, function (error, response) {
@@ -413,6 +424,25 @@ var adminPhone='9687268055';
             res.send({Message:"No Orders in List"});
           }
      });
+  });
+
+  //rest api to send feedback
+  app.post('/sendfeedback', function (req, res) {
+    var sql = "SELECT id from tbl_order where userguid='"+req.headers.customerguid+"' and id='"+req.body.orderID+"'";
+    connection.query(sql, function (error, results, fields) {
+         if (error) throw error;
+         if(results.length > 0)
+         {
+          connection.query('UPDATE `tbl_order` SET `feedback`=?,`rating`=? where `id`=?', [req.body.feedback, req.body.rating, req.body.orderID], function (error, results, fields) {
+            if (error) throw error;
+            res.json({Message:"success"});
+          });
+         }
+         else
+         {
+          res.send({Message:"No Orders in List"});
+         }
+    });
   });
 
   

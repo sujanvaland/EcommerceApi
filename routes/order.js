@@ -11,7 +11,8 @@ var SendSMSURL='http://dnd.smssetu.co.in/smsstatuswithid.aspx';
 var SMSusername='9687268055';
 var SMSpassword='TDM055VDR';
 var SMSsenderId='TDMEAT';
-var adminPhone='9687268055';
+//var adminPhone='9687268055';
+var adminPhone='9998216456';
 
   //rest api to get all orders
   app.get('/order', function (req, res) {
@@ -39,7 +40,7 @@ var adminPhone='9687268055';
   
   app.get('/GetAllOrders', function (req, res) {
     var callbackCounter = 0;
-    connection.query('select *,(select CONCAT(firstname," ",lastname) from tbl_registration where userguid=tbl_order.staff_id) as staffname from tbl_order', function (error, results, fields) {
+    connection.query('select *,(select CONCAT(firstname," ",lastname) from tbl_registration where userguid=tbl_order.staff_id) as staffname from tbl_order order by id desc', function (error, results, fields) {
         if (error) throw error;
         let orders = [];
         results.forEach(element => { 
@@ -63,7 +64,7 @@ var adminPhone='9687268055';
   //rest api to get filter order
   app.get('/GetAllOrders/:name', function (req, res) {
      var callbackCounter = 0;
-     connection.query('select *,(select CONCAT(firstname," ",lastname) from tbl_registration where userguid=tbl_order.staff_id) as staffname from tbl_order where (firstname like "%'+req.params.name+'%" or lastname like "%'+req.params.name+'%")', function (error, results, fields) {
+     connection.query('select *,(select CONCAT(firstname," ",lastname) from tbl_registration where userguid=tbl_order.staff_id) as staffname from tbl_order where (firstname like "%'+req.params.name+'%" or lastname like "%'+req.params.name+'%") order by id desc', function (error, results, fields) {
          if (error) throw error;
          if(results.length > 0)
          {
@@ -112,7 +113,32 @@ var adminPhone='9687268055';
       filterorderstatus='and orderstatus= "'+req.body.orderstatus+'"';
     }
 
-    connection.query('select *,(select CONCAT(firstname," ",lastname) from tbl_registration where userguid=tbl_order.staff_id) as staffname from tbl_order where id!="" '+filterbyname+' '+filterbydaterange+' '+filterorderstatus+' ', function (error, results, fields) {
+    var filtercity="";
+    if(req.body.city !='' && req.body.city !=null)
+    {
+      searchcity="";
+      if(req.body.city=="1")
+      {
+         searchcity="Vadodara";
+      }
+
+      if(req.body.city=="2")
+      {
+         searchcity="Ahmedabad";
+      }
+
+      filtercity='and city like "%'+searchcity+'%"';
+    }
+
+    var filterpaymenttype="";
+    if(req.body.paymenttype !='' && req.body.paymenttype !=null)
+    {
+      filterpaymenttype='and paymenttype = "'+req.body.paymenttype+'"';
+    }
+
+    console.log(filtercity);
+
+    connection.query('select *,(select CONCAT(firstname," ",lastname) from tbl_registration where userguid=tbl_order.staff_id) as staffname from tbl_order where id!="" '+filterbyname+' '+filterbydaterange+' '+filterorderstatus+' '+filtercity+' '+filterpaymenttype+' order by id desc', function (error, results, fields) {
         if (error) throw error;
         if(results.length > 0)
         {
