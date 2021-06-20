@@ -2,6 +2,8 @@ const express = require('express');
 const app = express();
 var connection = require('../config/db');
 var request = require('request');
+
+// Push Notification To Mobile App
 var PushNotificationURL='https://fcm.googleapis.com/fcm/send';
 var AuthorizationKey='key=AAAAs35jvRM:APA91bHZN45AahBEKrYzlKkyJ7N87xuDyaB1aqyWPm5uMQlgmwEgDRTCops8Bk7MQyHBHWc_qTNFCAXbOaewCMSn1zZymDkQyFT7_AyGnzCek6hN8169AcPRTMKvWzOHwOzZKT7GFDul';
 var SenderId='770919611667';
@@ -11,8 +13,8 @@ var SendSMSURL='http://dnd.smssetu.co.in/smsstatuswithid.aspx';
 var SMSusername='9687268055';
 var SMSpassword='TDM055VDR';
 var SMSsenderId='TDMEAT';
-//var adminPhone='9687268055';
-var adminPhone='9998216456';
+var adminPhone='9687268055';
+//var adminPhone='9998216456';
 
   //rest api to get all orders
   app.get('/order', function (req, res) {
@@ -349,7 +351,8 @@ var adminPhone='9998216456';
                   if(phone!='')
                   {
                     // For SMS Notification
-                    var SendMessage="Order No. "+orderno+" has been "+orderstatusvalue+".";
+                    
+                    var SendMessage="Order No. "+orderno+" has been "+orderstatusvalue+".: TDM";
                     var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+phone+"&msg="+SendMessage;
                     request(SendUrl, function (error, response) {});
                   }
@@ -368,7 +371,7 @@ var adminPhone='9998216456';
                       'Authorization': AuthorizationKey,
                       'Sender': SenderId
                     },
-                    body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Order Status"}})
+                    body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Order Status"},"data":{"type":"OrderDetail","orderid":orderno}})
                   };
                   request(options, function (error, response) {
                     if (error) throw new Error(error);
@@ -392,7 +395,7 @@ var adminPhone='9998216456';
                                   'Authorization': AuthorizationKey,
                                   'Sender': SenderId
                                 },
-                                body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Order Status"}})
+                                body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Order Status"},"data":{"type":"OrderDetail","orderid":orderno}})
                               };
                               request(options, function (error, response) {
                                 if (error) throw new Error(error);
@@ -492,7 +495,7 @@ app.post('/SendOrderStatusSMSNotification', function (req, res) {
                 if(phone!='')
                 {
                   // For SMS Notification
-                  var SendMessage="Order No. "+orderno+" has been "+orderstatusvalue+".";
+                  var SendMessage="Order No. "+orderno+" has been "+orderstatusvalue+".: TDM";
                   var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+phone+"&msg="+SendMessage;
                   request(SendUrl, function (error, response) {
                     res.send({Message:"success"});
@@ -590,7 +593,7 @@ app.post('/SendOrderStatusSMSNotification', function (req, res) {
                       'Authorization': AuthorizationKey,
                       'Sender': SenderId
                     },
-                    body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Assign Order"}})
+                    body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Assign Order"},"data":{"type":"OrderDetail","orderid":orderno}})
                   };
                   request(options, function (error, response) {
                     if (error) throw new Error(error);
@@ -604,7 +607,8 @@ app.post('/SendOrderStatusSMSNotification', function (req, res) {
                         var phone=results[0].phone;
                         if(device_token!='')
                         {
-                          var PushMessage="Your Order No. "+orderno+" has been assign to "+firstname+" "+lastname+".";
+                          
+                          var PushMessage="Your Order No. "+orderno+" has been assign to "+firstname+" "+lastname+". : TDM";
                           var options = {
                             'method': 'POST',
                             'url': PushNotificationURL,
@@ -613,7 +617,7 @@ app.post('/SendOrderStatusSMSNotification', function (req, res) {
                               'Authorization': AuthorizationKey,
                               'Sender': SenderId
                             },
-                            body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Assign Order"}})
+                            body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Assign Order"},"data":{"type":"OrderDetail","orderid":orderno}})
                           };
                           request(options, function (error, response) {
                             if (error) throw new Error(error);
@@ -677,7 +681,8 @@ app.post('/SendAssignStaffSMSNotification', function (req, res) {
               if(phone!='')
               {
                 // For SMS Notification
-                var SendMessage="a new Order No. "+orderno+" have been assigned to you. Pls confirm.";
+                
+                var SendMessage="a new Order No. "+orderno+" have been assigned to you. Pls confirm.: TDM";
                 //var SendMessage="You have assign new Order No. "+orderno+".";
                 var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+phone+"&msg="+SendMessage;
                 request(SendUrl, function (error, response) {
@@ -817,7 +822,7 @@ app.get('/GetTodayPendingOrdersCount', function (req, res) {
   });
 
   //rest api to get sum of amount of all orders into mysql database
-  app.get('/GetRecentOrders', function (req, res) {
+  app.get('/GetRecentOrders/:city', function (req, res) {
     var d=new Date();
     month = '' + (d.getMonth() + 1),
         day = '' + d.getDate(),
@@ -829,8 +834,7 @@ app.get('/GetTodayPendingOrdersCount', function (req, res) {
         day = '0' + day;
 
     var today= [year, month, day].join('-');
-
-    connection.query('select * from tbl_order where orderstatus=1 and DATE(orderdate)="'+today+'" order by orderdate desc limit 10', function (error, results, fields) {
+    connection.query('select * from tbl_order where city like "%'+req.params.city+'%" and orderstatus=1 and DATE(orderdate)="'+today+'" order by orderdate desc limit 25', function (error, results, fields) {
         if (error) throw error;
         res.send(results);
      });

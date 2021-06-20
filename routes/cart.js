@@ -8,8 +8,31 @@ var SendSMSURL='http://dnd.smssetu.co.in/smsstatuswithid.aspx';
 var SMSusername='9687268055';
 var SMSpassword='TDM055VDR';
 var SMSsenderId='TDMEAT';
-//var adminPhone='9687268055';
-var adminPhone='9998216456';
+var adminPhone='9687268055';
+//var adminPhone='9998216456';
+
+//Web Push Notification
+const webpush = require('web-push');
+//const vapidKeys = webpush.generateVAPIDKeys();
+// Prints 2 URL Safe Base64 Encoded Strings
+//console.log(vapidKeys.publicKey, vapidKeys.privateKey);
+const publicKey='BGSRPUaWVfh-VvVo6nkKDZtV4JKhi5uN1GG4JqWhV6Yhtbo6PLgp4F8VwuFNeBC8sixv63fLUCpUn4cjMFJEJ7c';
+const privateKey='TIGX6ZvZ1sTGhW1amBCXjYqBp4v-41mrLddOtrUS5Gc';
+webpush.setVapidDetails(
+  'mailto:thedailymeat786@gmail.com',
+  publicKey,
+  privateKey
+);
+
+const sub= {
+              endpoint:"https://fcm.googleapis.com/fcm/send/c-XuqgJqZbE:APA91bGSWh7PZhaW8t413gcAr9qfL98r5KYV7hDuRxenkAolPCEei8ZypW7RZ-IZKOJkFDFeQPCon2MsOLbnXMqCbzLRl-qGr2zsUdd8RV79JPCRAN1ZMln5gsc4mk5uXX4D_Dxb4U_n",
+              expirationTime:null,
+              keys:{
+                      p256dh:"BIKXR2fXSPNh7QjxUxyeQuIIThtcuh8mt5r3eohFNLibYmJQll4ROP2WcJGr2lrb1iL4xR5ZAT4Icv7_T6FElmU",
+                      auth:"lcob2oCHCCa0_zY-pr_OVg"
+              }
+            };
+
 
   
   //rest api to add cart data
@@ -255,12 +278,13 @@ var adminPhone='9998216456';
                             if(paymentstatus=="failed")
                             {
                               
-                              var SendMessage="Your Order No. "+Insertresults.insertId+" has not been confirmed. Please try again later.";
+                              var SendMessage="Your Order No. "+Insertresults.insertId+" has not been confirmed. please try again later.: TDM";
                               //var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed Failed.";
                             }
                             else
                             {
-                              var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed successfully. Thank you for shopping with us. Hope your experience with us will be as fresh and delicious as our product.";
+                              
+                              var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed successfully. Thank you for shopping with us. Hope your experience with us will be as fresh and delicious as our product. : TDM";
                               //var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed success.";
                             }
                             
@@ -274,8 +298,23 @@ var adminPhone='9998216456';
                                 var phone=adminPhone;
                                 if(phone!='')
                                 {
+                                  // For Web Push Notification
+                                  const payload = JSON.stringify({
+                                    notification: {
+                                      title: 'New Order',
+                                      body: "Order No. "+Insertresults.insertId+" has been placed successfully. please confirm.",
+                                      vibrate: [100, 50, 100],
+                                      data: {
+                                        orderguid: orderguid,
+                                        url:process.env.MAIN_SITE_URL
+                                      }
+                                    }
+                                  });
+                                  webpush.sendNotification(sub, payload)
+                                    .catch(error => console.error(error));
+
                                   // For SMS Notification
-                                  var SendAdminMessage="Order No. "+Insertresults.insertId+" has been placed successfully. Please confirm.";
+                                  var SendAdminMessage="Order No. "+Insertresults.insertId+" has been placed successfully. please confirm.: TDM";
                                   //var SendAdminMessage="Order No. "+Insertresults.insertId+" has been placed success.";
                                   var SendAdminUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+phone+"&msg="+SendAdminMessage;
                                   request(SendAdminUrl, function (error, response) {
@@ -318,7 +357,7 @@ var adminPhone='9998216456';
   //rest api to get all orders Customer Wise
   app.get('/orderbyuserguid', function (req, res) {
     var callbackCounter = 0;
-    connection.query('select * from tbl_order where userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
+    connection.query('select * from tbl_order where userguid="'+req.headers.customerguid+'" order by id desc', function (error, results, fields) {
         if (error) throw error;
         if(results.length)
           {

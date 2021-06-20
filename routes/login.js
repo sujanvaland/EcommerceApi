@@ -130,6 +130,7 @@ app.post('/customer_login',(req,res) =>{
 
         //Send SMS
         var tophone=results[0].phone;
+        
         var SendMessage="HI, "+send_otp+" is Your Verification code(O.T.P) for activating account. Thank you for using THE DAILY MEAT. Please do not share OTP with anyone.";
         //var SendMessage="Your one time passcode for activate account is " +send_otp;
         //var SendMessage="Your one time passcode for activate account:0000";
