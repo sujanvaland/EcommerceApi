@@ -122,7 +122,21 @@ app.post('/customer_login',(req,res) =>{
         const accessToken = generateAccessToken(user)
         const refreshToken = generateRefreshToken(user);
         refreshTokens.push(refreshToken);
-        res.json({ Message:"success",results,accessToken : accessToken, refreshToken : refreshToken});
+        
+        connection.query('SELECT id FROM `tbl_cart` WHERE device_token="'+req.headers.device_token+'"', function (error, cartresults, fields) {
+          if (error) throw error;
+          if(cartresults.length)
+          {
+            connection.query('update tbl_cart set userguid="'+results[0].userguid+'" where device_token = "'+req.headers.device_token+'"', function (cartupdaterror, cartupdateresults, fields) {
+              if (cartupdaterror) throw cartupdaterror;
+              res.json({ Message:"success",results,accessToken : accessToken, refreshToken : refreshToken});
+            });
+          }
+          else
+          {
+            res.json({ Message:"success",results,accessToken : accessToken, refreshToken : refreshToken});
+          }
+        });
       }
       else
       {
@@ -430,6 +444,24 @@ app.post('/deliverystaff_reset_password',(req,res) =>{
     
   });
   // res.json({ accessToken : accessToken, refreshToken : refreshToken});
+});
+
+//rest api to update a New Change Password data
+app.post('/NewChangePassword', function (req, res) {
+  var params  = req.body;
+  connection.query('select id from tbl_registration where password="'+params.oldpassword+'"', function (error, results, fields) {
+    if(results.length > 0)
+    {
+      connection.query('UPDATE `tbl_registration` SET `password`=? where `password`=?', [params.newpassword, params.oldpassword], function (error, results, fields) {
+        if (error) throw error;
+          res.json({ Message:"success"});
+        });
+    }
+    else
+    {
+      res.json({ Message:"Temporary Password is not match."});
+    }
+  });
 });
 
 module.exports = app;

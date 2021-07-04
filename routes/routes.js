@@ -14,6 +14,7 @@ apiRouter.use('/deliverystaff',authenticateToken, require('./deliverystaff'));
 apiRouter.use('/cms',authenticateToken, require('./cms'));
 apiRouter.use('/faq',authenticateToken, require('./faq'));
 
+apiRouter.use('/appcart', require('./appcart'));
 apiRouter.use('/appcategory', require('./appcategory'));
 apiRouter.use('/appproduct', require('./appproduct'));
 apiRouter.use('/apphomebanner', require('./apphomebanner'));

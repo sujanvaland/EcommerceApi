@@ -312,7 +312,9 @@ var adminPhone='9687268055';
           var orderno=orderresults[0].id;
           var staff_id=orderresults[0].staff_id;
           var userguid=orderresults[0].userguid;
-
+          var orderguid=req.body.orderguid;
+          
+          var redirectpage="OrderStatus";
           var orderstatusvalue="";
           if(req.body.orderstatus==1)
           {
@@ -337,6 +339,7 @@ var adminPhone='9687268055';
           if(req.body.orderstatus==6)
           {
             orderstatusvalue="Cancelled";
+            redirectpage="OrderDetail";
           }
 
           if(orderstatusvalue !='' && orderno!='' && userguid !='')
@@ -371,7 +374,7 @@ var adminPhone='9687268055';
                       'Authorization': AuthorizationKey,
                       'Sender': SenderId
                     },
-                    body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Order Status"},"data":{"type":"OrderDetail","orderid":orderno}})
+                    body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Order Status"},"data":{"type":redirectpage,"orderid":orderno,"orderguid":orderguid}})
                   };
                   request(options, function (error, response) {
                     if (error) throw new Error(error);
@@ -395,7 +398,7 @@ var adminPhone='9687268055';
                                   'Authorization': AuthorizationKey,
                                   'Sender': SenderId
                                 },
-                                body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Order Status"},"data":{"type":"OrderDetail","orderid":orderno}})
+                                body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Order Status"},"data":{"type":redirectpage,"orderid":orderno,"orderguid":orderguid}})
                               };
                               request(options, function (error, response) {
                                 if (error) throw new Error(error);
@@ -531,15 +534,21 @@ app.post('/SendOrderStatusSMSNotification', function (req, res) {
 
   //rest api to get all active staff into mysql database
   app.get('/GetAllActiveStaff', function (req, res) {
-    connection.query('select firstname,lastname,userguid,assignorder from tbl_registration where isactive=1 and role_id=2 and onride=0 and assignorder < 2', function (error, results, fields) {
-        if (error) throw error;
-        res.send(results);
-     });
+    // connection.query('select firstname,lastname,userguid,assignorder from tbl_registration where isactive=1 and role_id=2 and onride=0 and assignorder < 2', function (error, results, fields) {
+    //     if (error) throw error;
+    //     res.send(results);
+    //  });
+
+     connection.query('select firstname,lastname,userguid,assignorder from tbl_registration where isactive=1 and role_id=2', function (error, results, fields) {
+      if (error) throw error;
+      res.send(results);
+   });
   });
 
   //rest api to assign staff to order into mysql database
   app.post('/AssignStaff', function (req, res) {
-    connection.query('select userguid,assignorder from tbl_registration where isactive=1 and role_id=2 and onride=0 and assignorder < 2 and userguid="'+req.body.staff_id+'"', function (error, results, fields) {
+    // connection.query('select userguid,assignorder from tbl_registration where isactive=1 and role_id=2 and onride=0 and assignorder < 2 and userguid="'+req.body.staff_id+'"', function (error, results, fields) {
+      connection.query('select userguid,assignorder from tbl_registration where isactive=1 and role_id=2 and userguid="'+req.body.staff_id+'"', function (error, results, fields) {    
         if (error) throw error;
         if(results.length > 0)
         {
@@ -572,14 +581,18 @@ app.post('/SendOrderStatusSMSNotification', function (req, res) {
           var orderno=orderresults[0].id;
           var staff_id=orderresults[0].staff_id;
           var userguid=orderresults[0].userguid;
+          var orderguid=req.body.orderguid;
 
           if(orderno !='' && staff_id!='' && userguid !='')
           {
-            connection.query('select device_token from tbl_registration where isactive=1 and role_id=2 and userguid="'+staff_id+'"', function (error, results, fields) {
+            connection.query('select device_token,firstname,lastname,phone from tbl_registration where isactive=1 and role_id=2 and userguid="'+staff_id+'"', function (error, results, fields) {
               if (error) throw error;
               if(results.length > 0)
               {
                 var device_token=results[0].device_token;
+                var firstname=results[0].firstname;
+                var lastname=results[0].lastname;
+                var delivery_phone=results[0].phone;
                 if(device_token!='')
                 {
                   // For Push Notification
@@ -597,18 +610,15 @@ app.post('/SendOrderStatusSMSNotification', function (req, res) {
                   };
                   request(options, function (error, response) {
                     if (error) throw new Error(error);
-                    connection.query('select device_token,firstname,lastname,phone from tbl_registration where isactive=1 and role_id=3 and userguid="'+userguid+'"', function (error, results, fields) {
+                    connection.query('select device_token from tbl_registration where isactive=1 and role_id=3 and userguid="'+userguid+'"', function (error, userresults, fields) {
                       if (error) throw error;
-                      if(results.length > 0)
+                      if(userresults.length > 0)
                       {
-                        var device_token=results[0].device_token;
-                        var firstname=results[0].firstname;
-                        var lastname=results[0].lastname;
-                        var phone=results[0].phone;
+                        var device_token=userresults[0].device_token;
                         if(device_token!='')
                         {
                           
-                          var PushMessage="Your Order No. "+orderno+" has been assign to "+firstname+" "+lastname+". : TDM";
+                          var PushMessage="Your Order No. "+orderno+" has been assign to "+firstname+" "+lastname+". For Contact Delivery Boy Call On :"+delivery_phone;
                           var options = {
                             'method': 'POST',
                             'url': PushNotificationURL,
@@ -617,7 +627,7 @@ app.post('/SendOrderStatusSMSNotification', function (req, res) {
                               'Authorization': AuthorizationKey,
                               'Sender': SenderId
                             },
-                            body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Assign Order"},"data":{"type":"OrderDetail","orderid":orderno}})
+                            body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Assign Order"},"data":{"type":"OrderStatus","orderid":orderno,"orderguid":orderguid}})
                           };
                           request(options, function (error, response) {
                             if (error) throw new Error(error);

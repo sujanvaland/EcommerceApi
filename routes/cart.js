@@ -186,22 +186,23 @@ const sub= {
       }
       else
       {
-        connection.query('select id,addresstype,bfirstname,blastname,bphone,door_no_build_no_street,locality,landmark,bcity,bzipcode,isdefault,latitude,longitude from tbl_manage_address where userguid="'+req.headers.customerguid+'" and id="'+req.body.addressid+'"', function (error, addressresults, fields) {
+        connection.query('select id,addresstype,bfirstname,blastname,bphone,door_no_build_no_street,locality,landmark,bcity,bzipcode,isdefault,latitude,longitude,(select phone from tbl_registration where userguid=tbl_manage_address.userguid) as loginphone from tbl_manage_address where userguid="'+req.headers.customerguid+'" and id="'+req.body.addressid+'"', function (error, addressresults, fields) {
           if (error) throw error;
           if(addressresults.length > 0)
           {
             var bphone=addressresults[0].bphone;
             if(addressresults[0].bphone=='')
             {
-              connection.query('select phone from tbl_registration where userguid="'+req.headers.customerguid+'"', function (error, userresults, fields) {
-                if (error) throw error;
-                if(userresults.length > 0)
-                {
-                  bphone=userresults[0].phone;
-                }
-              });
+              bphone=addressresults[0].loginphone;
+              // connection.query('select phone from tbl_registration where userguid="'+req.headers.customerguid+'"', function (error, userresults, fields) {
+              //   if (error) throw error;
+              //   if(userresults.length > 0)
+              //   {
+              //     bphone=userresults[0].phone;
+              //   }
+              // });
             }
-
+            
             var paymentstatus="";
             var transactionid="";
             var responsedata="";
@@ -272,59 +273,74 @@ const sub= {
                         var changedate= new Date();
                         connection.query('INSERT INTO `tbl_orderstatus_log` SET `orderstatus`=?,`orderguid`=?,`userguid`=?,`changedate`=?', [orderstatus, orderresults[0].orderguid, req.headers.customerguid, changedate], function (error, Insertresultsorderstatus, fields) {
                           if (error) throw error;
-                          // For Delete Cart
-                          connection.query('DELETE FROM tbl_cart WHERE userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
-                            if (error) throw error;
-                            if(paymentstatus=="failed")
-                            {
-                              
-                              var SendMessage="Your Order No. "+Insertresults.insertId+" has not been confirmed. please try again later.: TDM";
-                              //var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed Failed.";
-                            }
-                            else
-                            {
-                              
-                              var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed successfully. Thank you for shopping with us. Hope your experience with us will be as fresh and delicious as our product. : TDM";
-                              //var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed success.";
-                            }
-                            
-                            var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+bphone+"&msg="+SendMessage;
-                            //res.json({ Message:"error",SendUrl}); 
-                            request(SendUrl, function (error, response) {
-                              //if (error) throw new Error(error);
-                              //res.json({ Message:"success",orderguid:orderguid,paymentstatus:paymentstatus});
-                              if(paymentstatus!="failed")
-                              {
-                                var phone=adminPhone;
-                                if(phone!='')
-                                {
-                                  // For Web Push Notification
-                                  const payload = JSON.stringify({
-                                    notification: {
-                                      title: 'New Order',
-                                      body: "Order No. "+Insertresults.insertId+" has been placed successfully. please confirm.",
-                                      vibrate: [100, 50, 100],
-                                      data: {
-                                        orderguid: orderguid,
-                                        url:process.env.MAIN_SITE_URL
-                                      }
-                                    }
-                                  });
-                                  webpush.sendNotification(sub, payload)
-                                    .catch(error => console.error(error));
 
-                                  // For SMS Notification
-                                  var SendAdminMessage="Order No. "+Insertresults.insertId+" has been placed successfully. please confirm.: TDM";
-                                  //var SendAdminMessage="Order No. "+Insertresults.insertId+" has been placed success.";
-                                  var SendAdminUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+phone+"&msg="+SendAdminMessage;
-                                  request(SendAdminUrl, function (error, response) {
+                          if(paymentstatus=="failed")
+                              {
+                                var SendMessage="Your Order No. "+Insertresults.insertId+" has not been confirmed. please try again later.: TDM";
+                                var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+bphone+"&msg="+SendMessage;
+                                  //res.json({ Message:"error",SendUrl}); 
+                                  request(SendUrl, function (error, response) {
                                     res.json({ Message:"success",orderguid:orderguid,paymentstatus:paymentstatus});
                                   });
-                                }
+                                  res.json({ Message:"success",orderguid:orderguid,paymentstatus:paymentstatus});
                               }
-                            });
-                            res.json({ Message:"success",orderguid:orderguid,paymentstatus:paymentstatus});
-                          });
+                              else
+                              {
+                                  // For Delete Cart
+                                  connection.query('DELETE FROM tbl_cart WHERE userguid="'+req.headers.customerguid+'"', function (error, results, fields) {
+                                    if (error) throw error;
+                                    if(paymentstatus=="failed")
+                                    {
+                                      
+                                      var SendMessage="Your Order No. "+Insertresults.insertId+" has not been confirmed. please try again later.: TDM";
+                                      //var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed Failed.";
+                                    }
+                                    else
+                                    {
+                                      
+                                      var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed successfully. Thank you for shopping with us. Hope your experience with us will be as fresh and delicious as our product. : TDM";
+                                      //var SendMessage="Your Order No. "+Insertresults.insertId+" has been placed success.";
+                                    }
+                                    
+                                    var SendUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+bphone+"&msg="+SendMessage;
+                                    //res.json({ Message:"error",SendUrl}); 
+                                    request(SendUrl, function (error, response) {
+                                      //if (error) throw new Error(error);
+                                      //res.json({ Message:"success",orderguid:orderguid,paymentstatus:paymentstatus});
+                                      if(paymentstatus!="failed")
+                                      {
+                                        var phone=adminPhone;
+                                        if(phone!='')
+                                        {
+                                          // For Web Push Notification
+                                          const payload = JSON.stringify({
+                                            notification: {
+                                              title: 'New Order',
+                                              body: "Order No. "+Insertresults.insertId+" has been placed successfully. please confirm.",
+                                              vibrate: [100, 50, 100],
+                                              data: {
+                                                orderguid: orderguid,
+                                                url:process.env.MAIN_SITE_URL
+                                              }
+                                            }
+                                          });
+                                          webpush.sendNotification(sub, payload)
+                                            .catch(error => console.error(error));
+
+                                          // For SMS Notification
+                                          var SendAdminMessage="Order No. "+Insertresults.insertId+" has been placed successfully. please confirm.: TDM";
+                                          //var SendAdminMessage="Order No. "+Insertresults.insertId+" has been placed success.";
+                                          var SendAdminUrl = SendSMSURL+"?mobile="+SMSusername+"&pass="+SMSpassword+"&senderid="+SMSsenderId+"&to="+phone+"&msg="+SendAdminMessage;
+                                          request(SendAdminUrl, function (error, response) {
+                                            res.json({ Message:"success",orderguid:orderguid,paymentstatus:paymentstatus});
+                                          });
+                                        }
+                                      }
+                                    });
+                                    res.json({ Message:"success",orderguid:orderguid,paymentstatus:paymentstatus});
+                                  });
+
+                              }
                         });
                     });
                   }
@@ -452,7 +468,7 @@ const sub= {
   //rest api to get Order Detail
   app.post('/orderdetail', function (req, res) {
     
-    connection.query('select * from tbl_order where orderguid="'+req.body.orderguid+'"', function (error, results, fields) {
+    connection.query('select *,(select phone from tbl_registration where userguid=tbl_order.staff_id) as delivery_phone from tbl_order where orderguid="'+req.body.orderguid+'"', function (error, results, fields) {
         if (error) throw error;
         if(results.length)
           {

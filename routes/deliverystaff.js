@@ -226,6 +226,9 @@ var SenderId='770919611667';
                     {
                       var orderno=orderresults[0].id;
                       var userguid=orderresults[0].userguid;
+                      var orderguid=req.body.orderguid;
+
+                      var redirectpage="OrderStatus";
                       var orderstatusvalue="";
                       if(req.body.orderstatus==4)
                       {
@@ -255,7 +258,7 @@ var SenderId='770919611667';
                                   'Authorization': AuthorizationKey,
                                   'Sender': SenderId
                                 },
-                                body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Order Status"},"data":{"type":"OrderDetail","orderid":orderno}})
+                                body: JSON.stringify({"to":device_token,"priority":"high","content_available":true,"notification":{"body":PushMessage,"title":"Order Status"},"data":{"type":redirectpage,"orderid":orderno,"orderguid":orderguid}})
                               };
                               request(options, function (error, response) {
                                 if (error) throw new Error(error);
