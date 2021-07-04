@@ -315,7 +315,22 @@ app.post('/verify_customer',(req,res) =>{
         const accessToken = generateAccessToken(user)
         const refreshToken = generateRefreshToken(user);
         refreshTokens.push(refreshToken);
-        res.json({ Message:"success",results,accessToken : accessToken, refreshToken : refreshToken});
+
+        connection.query('SELECT id FROM `tbl_cart` WHERE device_token="'+req.headers.device_token+'"', function (error, cartresults, fields) {
+          if (error) throw error;
+          if(cartresults.length)
+          {
+            connection.query('update tbl_cart set userguid="'+results[0].userguid+'" where device_token = "'+req.headers.device_token+'"', function (cartupdaterror, cartupdateresults, fields) {
+              if (cartupdaterror) throw cartupdaterror;
+              res.json({ Message:"success",results,accessToken : accessToken, refreshToken : refreshToken});
+            });
+          }
+          else
+          {
+            res.json({ Message:"success",results,accessToken : accessToken, refreshToken : refreshToken});
+          }
+        });
+        //res.json({ Message:"success",results,accessToken : accessToken, refreshToken : refreshToken});
       });
     }
     else
