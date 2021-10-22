@@ -140,8 +140,8 @@ const sub= {
             $salt=results[0].apisalt;
             $merchantId=results[0].merchantId;
 
-            $txnId=params.txnId;
-            $amount=params.finaltotal;
+            $txnId=params.txnId.toString();
+            $amount=params.finaltotal.toString();
             $productinfo=params.productName;
             $firstname=params.firstname;
             $email=params.email;
@@ -371,7 +371,7 @@ const sub= {
   });
 
   //rest api to get all orders Customer Wise
-  app.get('/orderbyuserguid', function (req, res) {
+  app.post('/orderbyuserguid', function (req, res) {
     var callbackCounter = 0;
     connection.query('select * from tbl_order where userguid="'+req.headers.customerguid+'" order by id desc', function (error, results, fields) {
         if (error) throw error;
