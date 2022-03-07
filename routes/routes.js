@@ -13,6 +13,7 @@ apiRouter.use('/order',authenticateToken, require('./order'));
 apiRouter.use('/deliverystaff',authenticateToken, require('./deliverystaff'));
 apiRouter.use('/cms',authenticateToken, require('./cms'));
 apiRouter.use('/faq',authenticateToken, require('./faq'));
+apiRouter.use('/report',authenticateToken, require('./report'));
 
 apiRouter.use('/appcart', require('./appcart'));
 apiRouter.use('/appcategory', require('./appcategory'));
