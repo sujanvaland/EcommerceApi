@@ -227,6 +227,11 @@ const sub= {
             
             var subtotal=results[0].subtotal;
             var deliverycharge=0;
+            if(subtotal < 300)
+            {
+              deliverycharge=40;
+            }
+            
             var ordertotal=(subtotal - 0) + (deliverycharge - 0);
             var orderguid=uuidv1();
 
