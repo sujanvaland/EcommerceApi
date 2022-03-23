@@ -35,7 +35,12 @@ app.post('/productdetail', function (req, res) {
 
 //rest api to get new arival product
 app.get('/newarrivalproduct', function (req, res) {
-  var sql = "SELECT *,(select instock from tbl_location_stock where pid=tbl_product.id and location='"+req.headers.location+"') as productinstock from tbl_product where isactive=1 and isnewarrival=1 ORDER BY id desc limit 2";
+  let location="Ahmedabad";
+  if(req.headers.location!=undefined && req.headers.location!='undefined' && req.headers.location!=null  && req.headers.location!='null')
+  {
+    location=req.headers.location;
+  };
+  var sql = "SELECT *,(select instock from tbl_location_stock where pid=tbl_product.id and location='"+location+"') as productinstock from tbl_product where isactive=1 and isnewarrival=1 ORDER BY id desc limit 2";
   
   connection.query(sql, function (error, results, fields) {
       if (error) throw error;

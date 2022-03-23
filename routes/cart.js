@@ -143,7 +143,7 @@ const sub= {
             $txnId=params.txnId.toString();
             $amount=params.finaltotal.toString();
             $productinfo=params.productName;
-            $firstname=params.firstname;
+            $firstname=params.firstname.trim();
             $email=params.email;
             $phone=params.phone;
 

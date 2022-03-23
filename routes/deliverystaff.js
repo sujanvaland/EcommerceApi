@@ -163,7 +163,7 @@ var SenderId='770919611667';
     //rest api to get all orders Delivery Staff Wise
     app.get('/orderbystaff', function (req, res) {
       var callbackCounter = 0;
-      connection.query('select * from tbl_order where staff_id="'+req.headers.customerguid+'"', function (error, results, fields) {
+      connection.query('select * from tbl_order where staff_id="'+req.headers.customerguid+'" order by id desc', function (error, results, fields) {
           if (error) throw error;
           if(results.length)
           {
