@@ -136,6 +136,18 @@ const sub= {
           }
           else
           {
+            // $key="TH2kSAvk";
+            // $salt="LkFIYslen2";
+            // $merchantId="7308943";
+
+            // $txnId="123456";
+            // $amount="100";
+            // $productinfo="Test Product";
+            // $firstname="Kunal";
+            // $email="kunal1990patel@gmail.com";
+            // $phone="9998216456";
+
+
             $key=results[0].apikey;
             $salt=results[0].apisalt;
             $merchantId=results[0].merchantId;
